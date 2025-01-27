@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using Rover656.Survivors.Common;
+using Rover656.Survivors.Common.Entities;
 using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework;
+using Rover656.Survivors.Framework.Entity;
 using UnityEngine;
 
 namespace Rover656.Survivors.Client {
@@ -52,10 +54,8 @@ namespace Rover656.Survivors.Client {
             // Trigger level system updates.
             _level.Update();
         }
-
-        // TODO: Relevant hooks to the ClientLevel to spawn & delete Prefabs.
-
-        public void SpawnEntity(AbstractEntity<AbstractLevel> entity) {
+        
+        public void SpawnEntity(AbstractEntity entity) {
             GameObject newEntity = null;
             if (entity is Player) {
                 newEntity = Instantiate(playerPrefab, entity.Position, Quaternion.identity);
@@ -66,9 +66,15 @@ namespace Rover656.Survivors.Client {
             }
         }
 
-        public void UpdateEntityPosition(AbstractEntity<AbstractLevel> entity) {
+        public void UpdateEntityPosition(AbstractEntity entity) {
             if (_gameObjects.TryGetValue(entity.Id, out var representative)) {
                 representative.transform.position = entity.Position;
+            }
+        }
+
+        public void EntityDestroyed(AbstractEntity entity) {
+            if (_gameObjects.Remove(entity.Id, out var representative)) {
+                Destroy(representative);
             }
         }
     }

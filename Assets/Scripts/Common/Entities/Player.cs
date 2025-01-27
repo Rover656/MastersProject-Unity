@@ -1,12 +1,12 @@
-using System;
-using Rover656.Survivors.Common.World;
+using Rover656.Survivors.Common.Registries;
 using Rover656.Survivors.Framework;
-using UnityEngine;
+using Rover656.Survivors.Framework.Entity;
 
-namespace Rover656.Survivors.Common
+namespace Rover656.Survivors.Common.Entities
 {
-    public class Player : AbstractEntity<AbstractLevel>
-    {
+    public class Player : AbstractEntity {
+        public override IEntityType Type => EntityTypes.Player;
+        
         public override float MovementSpeed => 32f;
     }
 }

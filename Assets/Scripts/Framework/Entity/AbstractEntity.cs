@@ -4,11 +4,14 @@ using LiteNetLib.Utils;
 using Rover656.Survivors.Framework.Network;
 using UnityEngine;
 
-namespace Rover656.Survivors.Framework {
-    public abstract class AbstractEntity<TGame> : INetSerializable where TGame : AbstractHybridGame<TGame> {
-        public TGame Game { get; set; }
+namespace Rover656.Survivors.Framework.Entity {
+    public abstract class AbstractEntity : INetSerializable {
+        
+        public abstract IEntityType Type { get; }
+        
+        public IHybridGameAccess Game { get; set; }
 
-        public Guid Id { get; set; }
+        public Guid Id { get; private set; } = Guid.NewGuid();
         public Vector2 Position { get; internal set; }
         public Vector2 MovementVector { get; internal set; }
 

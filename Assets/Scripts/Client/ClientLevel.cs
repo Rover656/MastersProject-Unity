@@ -1,6 +1,8 @@
 using LiteNetLib;
+using Rover656.Survivors.Common;
 using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework;
+using Rover656.Survivors.Framework.Entity;
 using Unity.VisualScripting;
 
 namespace Rover656.Survivors.Client {
@@ -16,14 +18,14 @@ namespace Rover656.Survivors.Client {
             _clientLevelManager = clientLevelManager;
         }
 
-        public override void OnEntityAdded(AbstractEntity<AbstractLevel> entity) {
+        public override void OnEntityAdded(AbstractEntity entity) {
             base.OnEntityAdded(entity);
 
             // Spawn in Unity world.
             _clientLevelManager?.SpawnEntity(entity);
         }
 
-        public override void OnEntityMoved(AbstractEntity<AbstractLevel> entity) {
+        public override void OnEntityMoved(AbstractEntity entity) {
             base.OnEntityMoved(entity);
             
             _clientLevelManager?.UpdateEntityPosition(entity);
