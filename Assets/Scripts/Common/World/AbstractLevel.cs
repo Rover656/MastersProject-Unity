@@ -1,4 +1,5 @@
 using LiteNetLib;
+using Rover656.Survivors.Common.Systems;
 using Rover656.Survivors.Framework;
 
 namespace Rover656.Survivors.Common.World
@@ -9,9 +10,11 @@ namespace Rover656.Survivors.Common.World
         
         public Player Player { get; }
         
-        public AbstractLevel(NetManager netManager) : base(netManager)
+        protected AbstractLevel(NetManager netManager) : base(netManager)
         {
-            Player = new Player();
+            Player = AddNewEntity(new Player());
+
+            AddSystem(new PhysicsSystem());
         }
     }
 }
