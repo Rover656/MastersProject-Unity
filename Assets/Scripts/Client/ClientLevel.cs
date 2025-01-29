@@ -1,9 +1,9 @@
 using LiteNetLib;
-using Rover656.Survivors.Common;
 using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework;
 using Rover656.Survivors.Framework.Entity;
-using Unity.VisualScripting;
+using Rover656.Survivors.Framework.Events;
+using UnityEngine;
 
 namespace Rover656.Survivors.Client {
     public class ClientLevel : AbstractLevel {
@@ -17,18 +17,26 @@ namespace Rover656.Survivors.Client {
         public ClientLevel(NetManager netManager, ClientLevelManager clientLevelManager) : base(netManager) {
             _clientLevelManager = clientLevelManager;
         }
+        
+        #region Unity Scene Updates
+        
+        // Handles entity spawn, movement and destruction.
 
-        public override void OnEntityAdded(AbstractEntity entity) {
-            base.OnEntityAdded(entity);
-
-            // Spawn in Unity world.
-            _clientLevelManager?.SpawnEntity(entity);
+        protected override void OnEntitySpawn(EntitySpawnEvent entitySpawnEvent) {
+            base.OnEntitySpawn(entitySpawnEvent);
+            _clientLevelManager?.SpawnEntity(entitySpawnEvent.Entity);
         }
 
-        public override void OnEntityMoved(AbstractEntity entity) {
-            base.OnEntityMoved(entity);
-            
+        protected override void OnEntityPositionChanged(AbstractEntity entity, Vector2 position) {
+            base.OnEntityPositionChanged(entity, position);
             _clientLevelManager?.UpdateEntityPosition(entity);
         }
+
+        protected override void OnEntityDestroyed(AbstractEntity entity) {
+            base.OnEntityDestroyed(entity);
+            _clientLevelManager?.DestroyEntity(entity);
+        }
+        
+        #endregion
     }
 }

@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using Rover656.Survivors.Framework.Entity;
+using Rover656.Survivors.Framework.EventBus;
+using Rover656.Survivors.Framework.Events;
 using Rover656.Survivors.Framework.Network;
 using UnityEngine;
 
@@ -19,12 +22,18 @@ namespace Rover656.Survivors.Framework {
 
         protected NetManager NetManager { get; }
         protected NetPeer NetPeer { get; set; }
+        
+        /// <summary>
+        /// When handling packets, always provide the game as userdatum.
+        /// </summary>
         protected NetPacketProcessor NetPacketProcessor { get; } = new();
 
         private readonly List<IHybridSystem<TGame>> _systems = new();
 
         private readonly List<AbstractEntity> _entities = new();
         private readonly Dictionary<Guid, AbstractEntity> _entitiesById = new();
+
+        private readonly Dictionary<ulong, Action<object>> _eventListeners = new();
 
         public IEnumerable<AbstractEntity> Entities => _entities;
 
@@ -44,10 +53,10 @@ namespace Rover656.Survivors.Framework {
                 },
                 (reader) => new Vector2(reader.GetFloat(), reader.GetFloat()));
             
-            // Register packet handlers.
-            NetPacketProcessor.SubscribeReusable<SpawnEntityPacket>(Handle);
-            NetPacketProcessor.SubscribeReusable<EntityPositionUpdatePacket>(Handle);
-            NetPacketProcessor.SubscribeReusable<DestroyEntityPacket>(Handle);
+            // Register event subscriptions
+            Subscribe<EntityPositionChangedEvent>(OnEntityPositionChanged);
+            Subscribe<EntitySpawnEvent>(OnEntitySpawn, EntitySpawnEvent.Register);
+            Subscribe<EntityDestroyedEvent>(OnEntityDestroyed);
         }
 
         public void Send<T>(T packet, DeliveryMethod deliveryMethod) where T : class, new() {
@@ -61,6 +70,35 @@ namespace Rover656.Survivors.Framework {
             NetPacketProcessor.Write(writer, packet);
             NetPeer.Send(writer, deliveryMethod);
         }
+        
+        #region Event Bus
+
+        public void Post<T>(T message) where T : AbstractEvent {
+            if (_eventListeners.TryGetValue(HashCache<T>.Id, out var handler)) {
+                handler(message);
+            }
+            
+            // Send over the network
+            Send(message.GetForNetwork(), message.NetworkDeliveryMethod);
+        }
+
+        protected void Subscribe<T>(Action<T> handler) where T : AbstractEvent, new() {
+            Subscribe(handler, (packetProcessor, action) => packetProcessor.SubscribeReusable(action));
+        }
+
+        protected void Subscribe<T>(Action<T> handler, Action<NetPacketProcessor, Action<T>> packetRegistrar) where T : AbstractEvent {
+            var id = HashCache<T>.Id;
+
+            if (_eventListeners.ContainsKey(id)) {
+                throw new InvalidOperationException($"Event listener {id} has already been subscribed!");
+            }
+            
+            // Stored as key-value pair so we can remove listeners (later)
+            _eventListeners[id] = obj => handler((T)obj);
+            packetRegistrar(NetPacketProcessor, handler);
+        }
+        
+        #endregion
 
         protected THybridSystem AddSystem<THybridSystem>(THybridSystem system)
             where THybridSystem : IHybridSystem<TGame> {
@@ -73,13 +111,9 @@ namespace Rover656.Survivors.Framework {
         }
 
         public T AddNewEntity<T>(T entity) where T : AbstractEntity {
-            _entities.Add(entity);
-            _entitiesById.Add(entity.Id, entity);
-            OnEntityAdded(entity);
-
-            // Send to remote, if connected.
-            Send(new SpawnEntityPacket(entity), DeliveryMethod.ReliableOrdered);
-
+            Post(new EntitySpawnEvent() {
+                Entity = entity,
+            });
             return entity;
         }
 
@@ -90,39 +124,62 @@ namespace Rover656.Survivors.Framework {
             }
         }
 
-        public virtual void OnEntityAdded(AbstractEntity entity) {
-            entity.Game = (TGame)this;
-        }
-
-        public virtual void OnEntityMoved(AbstractEntity entity) {
-        }
-
-        public virtual void OnEntityRemoved(AbstractEntity entity) {
-        }
-
         #region Network handlers
 
-        private void Handle(SpawnEntityPacket spawnEntityPacket) {
-            var entity = spawnEntityPacket.CreateEntityFrom(this);
-            
-            _entities.Add(entity);
-            _entitiesById.Add(entity.Id, entity);
-            OnEntityAdded(entity);
+        protected virtual void OnEntitySpawn(EntitySpawnEvent spawnEvent) {
+            _entities.Add(spawnEvent.Entity);
+            _entitiesById.Add(spawnEvent.Entity.Id, spawnEvent.Entity);
+            spawnEvent.Entity.Game = this;
         }
 
-        private void Handle(EntityPositionUpdatePacket entityPositionUpdatePacket) {
-            var entity = GetEntity(entityPositionUpdatePacket.EntityId);
-            entity.Position = entity.Position;
-            OnEntityMoved(entity);
-        }
-
-        private void Handle(DestroyEntityPacket destroyEntityPacket) {
-            if (_entitiesById.Remove(destroyEntityPacket.EntityId, out var entity)) {
-                _entities.Remove(entity);
-                OnEntityRemoved(entity);
+        protected void OnEntityPositionChanged(EntityPositionChangedEvent changedEvent) {
+            if (!_entitiesById.TryGetValue(changedEvent.EntityId, out var entity)) {
+                // Warn instead and some kind of recovery?
+                throw new InvalidOperationException("Entity does not exist!");
             }
+            
+            OnEntityPositionChanged(entity, changedEvent.Position);
+        }
+
+        // TODO: Could be another sub-packet?
+        protected virtual void OnEntityPositionChanged(AbstractEntity entity, Vector2 position) {
+            entity.Position = position;
+        }
+
+        protected void OnEntityDestroyed(EntityDestroyedEvent destroyedEvent) {
+            if (!_entitiesById.TryGetValue(destroyedEvent.EntityId, out var entity)) {
+                // Warn instead and some kind of recovery?
+                throw new InvalidOperationException("Entity does not exist!");
+            }
+            
+            OnEntityDestroyed(entity);
+            _entities.Remove(entity);
+            _entitiesById.Remove(entity.Id);
+            entity.Game = null;
+        }
+
+        protected virtual void OnEntityDestroyed(AbstractEntity entity) {
         }
 
         #endregion
+        
+        // Code borrowed from NetPacketProcessor
+        private static class HashCache<T>
+        {
+            public static readonly ulong Id;
+
+            //FNV-1 64 bit hash
+            static HashCache()
+            {
+                ulong hash = 14695981039346656037UL; //offset
+                string typeName = typeof(T).ToString();
+                for (var i = 0; i < typeName.Length; i++)
+                {
+                    hash ^= typeName[i];
+                    hash *= 1099511628211UL; //prime
+                }
+                Id = hash;
+            }
+        }
     }
 }

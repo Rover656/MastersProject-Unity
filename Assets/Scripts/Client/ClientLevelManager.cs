@@ -15,7 +15,7 @@ namespace Rover656.Survivors.Client {
         private ClientLevel _level;
 
         // Map between entity ID and GameObject.
-        private Dictionary<Guid, GameObject> _gameObjects = new();
+        private readonly Dictionary<Guid, GameObject> _gameObjects = new();
 
         private void Start() {
             _level = new ClientLevel(null, this);
@@ -72,7 +72,7 @@ namespace Rover656.Survivors.Client {
             }
         }
 
-        public void EntityDestroyed(AbstractEntity entity) {
+        public void DestroyEntity(AbstractEntity entity) {
             if (_gameObjects.Remove(entity.Id, out var representative)) {
                 Destroy(representative);
             }

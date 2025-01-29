@@ -1,6 +1,7 @@
 using System;
 using LiteNetLib;
 using LiteNetLib.Utils;
+using Rover656.Survivors.Framework.Events;
 using Rover656.Survivors.Framework.Network;
 using UnityEngine;
 
@@ -24,17 +25,13 @@ namespace Rover656.Survivors.Framework.Entity {
             if (position.Equals(Position)) {
                 return;
             }
-
-            Position = position;
-
-            // Fire movement event
-            Game.OnEntityMoved(this);
-
-            // Send update to the remote side.
-            Game.Send(new EntityPositionUpdatePacket() {
+            
+            // Post update event.
+            Debug.Log("Posting entity position change.");
+            Game.Post(new EntityPositionChangedEvent() {
                 EntityId = Id,
                 Position = position,
-            }, DeliveryMethod.ReliableOrdered);
+            });
         }
 
         public void SetMovementVector(Vector2 movementVector) {
