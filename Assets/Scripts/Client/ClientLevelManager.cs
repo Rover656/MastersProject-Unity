@@ -9,15 +9,27 @@ using UnityEngine;
 
 namespace Rover656.Survivors.Client {
     public class ClientLevelManager : MonoBehaviour {
-        // TODO: This will be in the stage scene and will bootstrap the logical level.
-        public GameObject playerPrefab;
-
         private ClientLevel _level;
+        
+        [Serializable]
+        public struct NamedPrefab {
+            public string name;
+            public GameObject prefab;
+        }
+
+        public List<NamedPrefab> entityPrefabs = new();
+        private Dictionary<string, GameObject> _entityPrefabMap = new();
 
         // Map between entity ID and GameObject.
         private readonly Dictionary<Guid, GameObject> _gameObjects = new();
 
         private void Start() {
+            // Copy KVP from Unity into index
+            foreach (var pair in entityPrefabs)
+            {
+                _entityPrefabMap.Add(pair.name, pair.prefab);
+            }
+            
             _level = new ClientLevel(null, this);
             
             // Add entities that were added during initialization.
@@ -29,7 +41,6 @@ namespace Rover656.Survivors.Client {
 
         private void Update() {
             // TODO: Temporary input logic for player
-
             Vector2 playerMovementVector = Vector2.zero;
             if (Input.GetKey(KeyCode.W)) {
                 playerMovementVector.y += 1;
@@ -48,21 +59,23 @@ namespace Rover656.Survivors.Client {
             }
 
             playerMovementVector.Normalize();
-
             _level.Player.SetMovementVector(playerMovementVector);
             
-            // Trigger level system updates.
+            // Trigger level updates.
             _level.Update();
         }
         
-        public void SpawnEntity(AbstractEntity entity) {
-            GameObject newEntity = null;
-            if (entity is Player) {
-                newEntity = Instantiate(playerPrefab, entity.Position, Quaternion.identity);
+        public void SpawnEntity(AbstractEntity entity)
+        {
+            var entityTypeName = _level.Registries.GetNameFrom(FrameworkRegistries.EntityTypes, entity.Type);
+            if (_entityPrefabMap.TryGetValue(entityTypeName, out var prefab))
+            {
+                var entityObject = Instantiate(prefab, entity.Position, Quaternion.identity);
+                _gameObjects.Add(entity.Id, entityObject);
             }
-
-            if (newEntity != null) {
-                _gameObjects.Add(entity.Id, newEntity);
+            else
+            {
+                Debug.LogError($"Error spawning entity: Missing prefab mapping for entity type '{entityTypeName}'.");
             }
         }
 

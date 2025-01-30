@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using Rover656.Survivors.Framework.Entity;
 using Rover656.Survivors.Framework.EventBus;
 using Rover656.Survivors.Framework.Events;
-using Rover656.Survivors.Framework.Network;
 using UnityEngine;
 
 namespace Rover656.Survivors.Framework {
+    // TODO: Methods to serialize the entire game state for a large initialization packet.
     /// <summary>
     /// Fundamentals for a hybrid-compute game.
     /// </summary>
@@ -110,11 +109,26 @@ namespace Rover656.Survivors.Framework {
             return _entitiesById[entityId];
         }
 
-        public T AddNewEntity<T>(T entity) where T : AbstractEntity {
+        public T AddNewEntity<T>(T entity) where T : AbstractEntity
+        {
+            return AddNewEntity(entity, Vector2.zero);
+        }
+
+        public T AddNewEntity<T>(T entity, Vector2 position) where T : AbstractEntity
+        {
+            entity.Position = position;
             Post(new EntitySpawnEvent() {
                 Entity = entity,
             });
             return entity;
+        }
+
+        public void DestroyEntity(Guid entityId)
+        {
+            Post(new EntityDestroyedEvent()
+            {
+                EntityId = entityId,
+            });
         }
 
         public void Update() {

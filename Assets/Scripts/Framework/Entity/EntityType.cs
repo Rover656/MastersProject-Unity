@@ -8,7 +8,12 @@ namespace Rover656.Survivors.Framework.Entity {
         public EntityType(Func<T> factory) {
             _factory = factory;
         }
-        
+
+        public T Create()
+        {
+            return _factory();
+        }
+
         public AbstractEntity FromNetwork(NetDataReader reader) {
             var entity = _factory();
             entity.Deserialize(reader);

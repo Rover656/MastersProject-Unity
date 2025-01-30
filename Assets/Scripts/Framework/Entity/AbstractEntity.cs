@@ -27,7 +27,6 @@ namespace Rover656.Survivors.Framework.Entity {
             }
             
             // Post update event.
-            Debug.Log("Posting entity position change.");
             Game.Post(new EntityPositionChangedEvent() {
                 EntityId = Id,
                 Position = position,

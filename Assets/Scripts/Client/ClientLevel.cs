@@ -1,4 +1,5 @@
 using LiteNetLib;
+using Rover656.Survivors.Common.Events;
 using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework;
 using Rover656.Survivors.Framework.Entity;
@@ -36,7 +37,18 @@ namespace Rover656.Survivors.Client {
             base.OnEntityDestroyed(entity);
             _clientLevelManager?.DestroyEntity(entity);
         }
-        
+
+        // TODO: Damage & Heal particles.
+        protected override void OnEntityDamaged(EntityDamageEvent damageEvent)
+        {
+            base.OnEntityDamaged(damageEvent);
+        }
+
+        protected override void OnEntityHealed(EntityHealEvent healEvent)
+        {
+            base.OnEntityHealed(healEvent);
+        }
+
         #endregion
     }
 }

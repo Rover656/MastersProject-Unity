@@ -7,6 +7,10 @@
         public int GetIdFrom<T>(RegistryKey<T> key, T entry) {
             return Get(key).GetId(entry);
         }
+        
+        public string GetNameFrom<T>(RegistryKey<T> key, T entry) {
+            return Get(key).GetName(entry);
+        }
 
         public T GetFrom<T>(RegistryKey<T> key, string name) {
             return Get(key).Get(name);
