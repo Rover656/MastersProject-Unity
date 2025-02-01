@@ -4,6 +4,7 @@ using Rover656.Survivors.Common.Entities;
 using Rover656.Survivors.Common.Events;
 using Rover656.Survivors.Common.Registries;
 using Rover656.Survivors.Common.Systems;
+using Rover656.Survivors.Common.Systems.EnemyMovement;
 using Rover656.Survivors.Framework;
 using UnityEngine;
 
@@ -16,11 +17,13 @@ namespace Rover656.Survivors.Common.World
         public Player Player { get; }
 
         public PhysicsSystem PhysicsSystem { get; }
+        public DumbFollowerSystem DumbFollowerSystem { get; }
         
         protected AbstractLevel(NetManager netManager) : base(SurvivorsRegistries.Instance, netManager)
         {
             // Register all systems.
             PhysicsSystem = AddSystem(new PhysicsSystem());
+            DumbFollowerSystem = AddSystem(new DumbFollowerSystem());
 
             // Subscribe to game events
             Subscribe<EntityDamageEvent>(OnEntityDamaged);
@@ -30,7 +33,11 @@ namespace Rover656.Survivors.Common.World
             Player = AddNewEntity(EntityTypes.Player.Create());
             
             // Add an example enemy (will be the job of the director system soon)
-            AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 2));
+            AddNewEntity(EntityTypes.Bat.Create(), new Vector2(1, 2));
+            AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 1));
+            // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(1, 1));
+            // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(0, 2));
+            // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 0));
         }
 
         protected virtual void OnEntityDamaged(EntityDamageEvent damageEvent)

@@ -6,6 +6,9 @@ namespace Rover656.Survivors.Common.Entities
 {
     public class Player : AbstractEntity, IDamageable {
         public override IEntityType Type => EntityTypes.Player;
+
+        public override bool CanCollide => false;
+        public override int PhysicsLayer => 0;
         
         public override float MovementSpeed => 32f;
 

@@ -1,3 +1,4 @@
+using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework.Entity;
 
 namespace Rover656.Survivors.Common.Entities
@@ -13,6 +14,9 @@ namespace Rover656.Survivors.Common.Entities
 
         public override IEntityType Type { get; }
         public override float MovementSpeed { get; }
+
+        public override bool CanCollide => true;
+        public override int PhysicsLayer => CollisionLayers.Enemies;
 
         public int Health { get; private set; }
 

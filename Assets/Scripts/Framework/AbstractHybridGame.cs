@@ -35,6 +35,8 @@ namespace Rover656.Survivors.Framework {
         private readonly Dictionary<ulong, Action<object>> _eventListeners = new();
 
         public IEnumerable<AbstractEntity> Entities => _entities;
+        public Dictionary<object, List<AbstractEntity>> EntitiesByTag { get; } = new();
+        public Dictionary<int, List<AbstractEntity>> EntitiesByPhysicsLayer { get; } = new();
 
         protected AbstractHybridGame(IRegistryProvider registries, NetManager netManager) {
             Registries = registries;
@@ -143,6 +145,25 @@ namespace Rover656.Survivors.Framework {
         protected virtual void OnEntitySpawn(EntitySpawnEvent spawnEvent) {
             _entities.Add(spawnEvent.Entity);
             _entitiesById.Add(spawnEvent.Entity.Id, spawnEvent.Entity);
+
+            foreach (var tag in spawnEvent.Entity.Type.Tags)
+            {
+                if (!EntitiesByTag.TryGetValue(tag, out var tagList))
+                {
+                    tagList = new();
+                    EntitiesByTag.Add(tag, tagList);
+                }
+                
+                tagList.Add(spawnEvent.Entity);
+            }
+
+            if (!EntitiesByPhysicsLayer.TryGetValue(spawnEvent.Entity.PhysicsLayer, out var collisionList))
+            {
+                collisionList = new();
+                EntitiesByPhysicsLayer.Add(spawnEvent.Entity.PhysicsLayer, collisionList);
+            }
+            collisionList.Add(spawnEvent.Entity);
+            
             spawnEvent.Entity.Game = this;
         }
 
@@ -169,6 +190,20 @@ namespace Rover656.Survivors.Framework {
             OnEntityDestroyed(entity);
             _entities.Remove(entity);
             _entitiesById.Remove(entity.Id);
+            
+            foreach (var tag in entity.Type.Tags)
+            {
+                if (EntitiesByTag.TryGetValue(tag, out var tagList))
+                {
+                    tagList.Remove(entity);
+                }
+            }
+
+            if (EntitiesByPhysicsLayer.TryGetValue(entity.PhysicsLayer, out var list))
+            {
+                list.Remove(entity);
+            }
+            
             entity.Game = null;
         }
 
