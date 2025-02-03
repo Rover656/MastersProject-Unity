@@ -15,6 +15,9 @@ namespace Rover656.Survivors.Framework.Entity {
         public Guid Id { get; private set; } = Guid.NewGuid();
         public Vector2 Position { get; internal set; }
         public Vector2 Size => Vector2.one; // TODO: Configurable
+        
+        public Rect Bounds => new(Position, Size);
+        
         public abstract bool CanCollide { get; }
         public abstract int PhysicsLayer { get; }
         public Vector2 MovementVector { get; internal set; }

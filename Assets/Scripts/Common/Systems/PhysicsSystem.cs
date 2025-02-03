@@ -1,4 +1,5 @@
 using System;
+using Rover656.Survivors.Common.Utility;
 using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework;
 using UnityEngine;
@@ -51,8 +52,7 @@ namespace Rover656.Survivors.Common.Systems
                         {
                             if (entity == other || !other.CanCollide) continue; // Don't check self-collision
 
-                            if (IsColliding(proposedPosition, entity.Size, other.Position, other.Size, out Vector2 penetrationVector))
-                            {
+                            if (proposedPosition.Intersects(entity.Size, other.Bounds, out var penetrationVector)) {
                                 // Separate entities if they are fully intersecting
                                 entity.SetPosition(entity.Position + penetrationVector);
 
@@ -67,41 +67,6 @@ namespace Rover656.Survivors.Common.Systems
                     entity.SetPosition(entity.Position + (velocity * deltaTime));
                 }
             }
-        }
-
-        // TODO: Testing ChatGPT solution to collisions
-        bool IsColliding(Vector2 posA, Vector2 sizeA, Vector2 posB, Vector2 sizeB, out Vector2 penetrationVector)
-        {
-            float leftA = posA.x;
-            float rightA = posA.x + sizeA.x;
-            float topA = posA.y;
-            float bottomA = posA.y + sizeA.y;
-
-            float leftB = posB.x;
-            float rightB = posB.x + sizeB.x;
-            float topB = posB.y;
-            float bottomB = posB.y + sizeB.y;
-
-            if (rightA > leftB && leftA < rightB && bottomA > topB && topA < bottomB)
-            {
-                // Calculate penetration vector to push entities apart
-                float overlapX = Math.Min(rightA - leftB, rightB - leftA);
-                float overlapY = Math.Min(bottomA - topB, bottomB - topA);
-
-                if (overlapX < overlapY)
-                {
-                    penetrationVector = new Vector2(overlapX * (posA.x < posB.x ? -1 : 1), 0);
-                }
-                else
-                {
-                    penetrationVector = new Vector2(0, overlapY * (posA.y < posB.y ? -1 : 1));
-                }
-
-                return true;
-            }
-
-            penetrationVector = Vector2.zero;
-            return false;
         }
     }
 }

@@ -39,14 +39,13 @@ namespace Rover656.Survivors.Client {
         }
 
         // TODO: Damage & Heal particles.
-        protected override void OnEntityDamaged(EntityDamageEvent damageEvent)
+        protected override void OnEntityHealthChanged(EntityHealthChangedEvent healthChangedEvent)
         {
-            base.OnEntityDamaged(damageEvent);
-        }
+            base.OnEntityHealthChanged(healthChangedEvent);
 
-        protected override void OnEntityHealed(EntityHealEvent healEvent)
-        {
-            base.OnEntityHealed(healEvent);
+            if (healthChangedEvent.Delta > 0) {
+                _clientLevelManager?.SpawnDamageParticle(healthChangedEvent.EntityId, healthChangedEvent.Delta);
+            }
         }
 
         #endregion

@@ -8,55 +8,70 @@ using Rover656.Survivors.Common.Systems.EnemyMovement;
 using Rover656.Survivors.Framework;
 using UnityEngine;
 
-namespace Rover656.Survivors.Common.World
-{
-    public abstract class AbstractLevel : AbstractHybridGame<AbstractLevel>
-    {
-        public int GameTime { get; set; }
+namespace Rover656.Survivors.Common.World {
+    public abstract class AbstractLevel : AbstractHybridGame<AbstractLevel> {
+        public float GameTime { get; set; }
 
         public Player Player { get; }
 
         public PhysicsSystem PhysicsSystem { get; }
         public DumbFollowerSystem DumbFollowerSystem { get; }
-        
-        protected AbstractLevel(NetManager netManager) : base(SurvivorsRegistries.Instance, netManager)
-        {
+        public DamageSystem DamageSystem { get; }
+
+        protected AbstractLevel(NetManager netManager) : base(SurvivorsRegistries.Instance, netManager) {
             // Register all systems.
             PhysicsSystem = AddSystem(new PhysicsSystem());
             DumbFollowerSystem = AddSystem(new DumbFollowerSystem());
+            DamageSystem = AddSystem(new DamageSystem());
 
             // Subscribe to game events
-            Subscribe<EntityDamageEvent>(OnEntityDamaged);
-            Subscribe<EntityHealEvent>(OnEntityHealed);
-            
+            SubscribeNetSerializable<EntityHealthChangedEvent>(OnEntityHealthChanged);
+            Subscribe<EntityDiedEvent>(OnEntityDied);
+
             // Spawn the player
             Player = AddNewEntity(EntityTypes.Player.Create());
-            
+
             // Add an example enemy (will be the job of the director system soon)
             AddNewEntity(EntityTypes.Bat.Create(), new Vector2(1, 2));
+            AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 1));
+            AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 1));
+            AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 1));
+            AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 1));
             AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 1));
             // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(1, 1));
             // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(0, 2));
             // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 0));
         }
 
-        protected virtual void OnEntityDamaged(EntityDamageEvent damageEvent)
-        {
-            if (GetEntity(damageEvent.EntityId) is not IDamageable damageable) return;
-            
-            damageable.LocalSetHealth(damageable.Health - damageEvent.Damage);
+        public override void Update() {
+            GameTime += Time.deltaTime;
+            base.Update();
+        }
 
-            if (damageable.Health <= 0)
-            {
-                DestroyEntity(damageEvent.EntityId);
+        protected virtual void OnEntityHealthChanged(EntityHealthChangedEvent healthChangedEvent) {
+            if (GetEntity(healthChangedEvent.EntityId) is not IDamageable damageable) return;
+
+            Debug.Log($"Entity {healthChangedEvent.EntityId} took {healthChangedEvent.Delta} damage.");
+
+            damageable.LocalSetHealth(damageable.Health - healthChangedEvent.Delta);
+
+            if (healthChangedEvent.InvincibleUntil.HasValue) {
+                damageable.LocalSetInvincibleUntil(healthChangedEvent.InvincibleUntil.Value);
+            }
+
+            if (damageable.Health <= 0) {
+                Post(new EntityDiedEvent {
+                    EntityId = healthChangedEvent.EntityId,
+                });
             }
         }
 
-        protected virtual void OnEntityHealed(EntityHealEvent healEvent)
-        {
-            if (GetEntity(healEvent.EntityId) is not IDamageable damageable) return;
-            
-            damageable.LocalSetHealth(Math.Min(damageable.Health + healEvent.Healing, damageable.MaxHealth));
+        protected virtual void OnEntityDied(EntityDiedEvent diedEvent) {
+            if (Player.Id == diedEvent.EntityId) {
+                Debug.Log("Player died! Need to pause the game loop and show death screen etc (i.e. hand back to Unity)");
+            } else {
+                DestroyEntity(diedEvent.EntityId);
+            }
         }
     }
 }

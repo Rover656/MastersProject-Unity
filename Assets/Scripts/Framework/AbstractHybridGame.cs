@@ -87,6 +87,10 @@ namespace Rover656.Survivors.Framework {
             Subscribe(handler, (packetProcessor, action) => packetProcessor.SubscribeReusable(action));
         }
 
+        protected void SubscribeNetSerializable<T>(Action<T> handler) where T : AbstractEvent, INetSerializable, new() {
+            Subscribe(handler, (packetProcessor, action) => packetProcessor.SubscribeNetSerializable(action));
+        }
+
         protected void Subscribe<T>(Action<T> handler, Action<NetPacketProcessor, Action<T>> packetRegistrar) where T : AbstractEvent {
             var id = HashCache<T>.Id;
 
@@ -133,7 +137,7 @@ namespace Rover656.Survivors.Framework {
             });
         }
 
-        public void Update() {
+        public virtual void Update() {
             // Update all systems.
             foreach (var system in _systems) {
                 system.Update((TGame)this, Time.deltaTime);
