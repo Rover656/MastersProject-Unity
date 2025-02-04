@@ -25,7 +25,7 @@ namespace Rover656.Survivors.Framework {
         /// <summary>
         /// When handling packets, always provide the game as userdatum.
         /// </summary>
-        protected NetPacketProcessor NetPacketProcessor { get; } = new();
+        public NetPacketProcessor NetPacketProcessor { get; } = new();
 
         private readonly List<IHybridSystem<TGame>> _systems = new();
 

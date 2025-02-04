@@ -171,10 +171,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: ClientLevelManager
       objectReference: {fileID: 0}
-    - target: {fileID: 3804197335391355565, guid: 76f1f8208ac28400c9e8e4e5df497eca, type: 3}
-      propertyPath: damageParticlePrefab
-      value: 
-      objectReference: {fileID: 6753830913946306668, guid: 13262f0300150fb4da2fb409297d4470, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

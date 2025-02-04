@@ -44,7 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12e9b13524cf41c787d5c92c8b25cca3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerPrefab: {fileID: 3202400305350403037, guid: a48dab1ea1d08424eb7c8e323132e37e, type: 3}
+  damageParticlePrefab: {fileID: 6753830913946306668, guid: 13262f0300150fb4da2fb409297d4470, type: 3}
   entityPrefabs:
   - name: player
     prefab: {fileID: 3202400305350403037, guid: a48dab1ea1d08424eb7c8e323132e37e, type: 3}

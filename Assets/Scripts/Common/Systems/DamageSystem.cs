@@ -57,8 +57,10 @@ namespace Rover656.Survivors.Common.Systems {
 
                     // If there is a collision, deal the contact damage.
                     if (damageSourceEntity.Bounds.Intersects(damageableEntity.Bounds, out _)) {
-                        // TODO: Configurable timer, and definitely not 5s
-                        pendingDamage.Add(damageableEntity.Id, (damageSource.Damage, abstractLevel.GameTime + damageable.InvincibilityDuration));
+                        var damageDealt = damageable.CalculateDamageTaken(damageSource.Damage);
+                        if (damageDealt > 0) {
+                            pendingDamage.Add(damageableEntity.Id, (damageDealt, abstractLevel.GameTime + damageable.InvincibilityDuration));
+                        }
                     }
                 }
             }

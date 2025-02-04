@@ -12,5 +12,9 @@ namespace Rover656.Survivors.Common.Entities
         // Used by network handler.
         void LocalSetHealth(int health);
         void LocalSetInvincibleUntil(float invincibleUntil);
+
+        int CalculateDamageTaken(int originalDamage) {
+            return originalDamage;
+        }
     }
 }

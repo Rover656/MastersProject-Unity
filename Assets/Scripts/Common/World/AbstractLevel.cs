@@ -34,10 +34,6 @@ namespace Rover656.Survivors.Common.World {
             // Add an example enemy (will be the job of the director system soon)
             AddNewEntity(EntityTypes.Bat.Create(), new Vector2(1, 2));
             AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 1));
-            AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 1));
-            AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 1));
-            AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 1));
-            AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 1));
             // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(1, 1));
             // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(0, 2));
             // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 0));

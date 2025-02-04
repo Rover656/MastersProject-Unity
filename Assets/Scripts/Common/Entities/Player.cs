@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using LiteNetLib.Utils;
+using Rover656.Survivors.Common.Items;
 using Rover656.Survivors.Common.Registries;
 using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework.Entity;
@@ -13,15 +16,32 @@ namespace Rover656.Survivors.Common.Entities
         
         public override float MovementSpeed => 32f;
         
-        public int MaxHealth => 12; // TODO
+        public int MaxHealth => 12 + _healthIncrease;
         public int Health { get; private set; }
         
         public float InvincibilityDuration => 0.17f;
         public float InvincibleUntil { get; private set; }
 
+        private List<ItemStack> _inventory = new();
+        
+        // Cached properties
+        private int _healthIncrease = 0;
+        private int _totalDamageResistance = 0;
+
         public Player()
         {
             Health = MaxHealth;
+            
+            // TEST:
+            _totalDamageResistance = 15;
+        }
+
+        public int CalculateDamageTaken(int originalDamage) {
+            return Math.Max(0, originalDamage - _totalDamageResistance);
+        }
+
+        public void LocalAddItem(ItemStack stack) {
+            
         }
 
         public void LocalSetHealth(int health)
@@ -31,6 +51,24 @@ namespace Rover656.Survivors.Common.Entities
 
         public void LocalSetInvincibleUntil(float invincibleUntil) {
             InvincibleUntil = invincibleUntil;
+        }
+        
+        // Cache item improvements.
+        private void ProcessItems() {
+            _healthIncrease = 0;
+            _totalDamageResistance = 0;
+            
+            foreach (var stack in _inventory) {
+                if (stack.Item.HasComponent(ItemComponents.HealthIncrease)) {
+                    var getter = stack.Item.GetComponent(ItemComponents.HealthIncrease);
+                    _healthIncrease += getter(stack.Count);
+                }
+                
+                if (stack.Item.HasComponent(ItemComponents.GeneralDamageResistance)) {
+                    var resistanceGetter = stack.Item.GetComponent(ItemComponents.GeneralDamageResistance);
+                    _totalDamageResistance += resistanceGetter(stack.Count);
+                }
+            }
         }
 
         protected override void SerializeAdditional(NetDataWriter writer)
