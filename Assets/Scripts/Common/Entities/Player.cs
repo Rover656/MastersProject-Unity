@@ -22,7 +22,7 @@ namespace Rover656.Survivors.Common.Entities
         public float InvincibilityDuration => 0.17f;
         public float InvincibleUntil { get; private set; }
 
-        private List<ItemStack> _inventory = new();
+        private readonly List<ItemStack> _inventory = new();
         
         // Cached properties
         private int _healthIncrease = 0;
@@ -31,9 +31,6 @@ namespace Rover656.Survivors.Common.Entities
         public Player()
         {
             Health = MaxHealth;
-            
-            // TEST:
-            _totalDamageResistance = 15;
         }
 
         public int CalculateDamageTaken(int originalDamage) {
@@ -41,7 +38,17 @@ namespace Rover656.Survivors.Common.Entities
         }
 
         public void LocalAddItem(ItemStack stack) {
-            
+            var added = false;
+            foreach (var existingStack in _inventory) {
+                if (existingStack.Item != stack.Item) continue;
+                existingStack.Count += stack.Count;
+                added = true;
+                break;
+            }
+
+            if (!added) {
+                _inventory.Add(stack);
+            }
         }
 
         public void LocalSetHealth(int health)

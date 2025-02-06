@@ -9,8 +9,16 @@ namespace Rover656.Survivors.Framework.Entity {
     public abstract class AbstractEntity : INetSerializable {
         
         public abstract IEntityType Type { get; }
-        
-        public IHybridGameAccess Game { get; set; }
+
+        private IHybridGameAccess _game;
+
+        public IHybridGameAccess Game {
+            get => _game;
+            set {
+                _game = value;
+                OnGameAttached();
+            }
+        }
 
         public Guid Id { get; private set; } = Guid.NewGuid();
         public Vector2 Position { get; internal set; }
@@ -51,6 +59,9 @@ namespace Rover656.Survivors.Framework.Entity {
                 EntityId = Id,
                 MovementVector = MovementVector,
             }, DeliveryMethod.ReliableOrdered);
+        }
+
+        protected virtual void OnGameAttached() {
         }
 
         protected virtual void SerializeAdditional(NetDataWriter writer) {

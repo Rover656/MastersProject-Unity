@@ -27,6 +27,7 @@ namespace Rover656.Survivors.Common.World {
             // Subscribe to game events
             SubscribeNetSerializable<EntityHealthChangedEvent>(OnEntityHealthChanged);
             Subscribe<EntityDiedEvent>(OnEntityDied);
+            Subscribe<PlayerCollectItemEvent>(OnPlayerCollectedItem, PlayerCollectItemEvent.Register);
 
             // Spawn the player
             Player = AddNewEntity(EntityTypes.Player.Create());
@@ -68,6 +69,10 @@ namespace Rover656.Survivors.Common.World {
             } else {
                 DestroyEntity(diedEvent.EntityId);
             }
+        }
+
+        protected virtual void OnPlayerCollectedItem(PlayerCollectItemEvent collectEvent) {
+            Player.LocalAddItem(collectEvent.Stack);
         }
     }
 }

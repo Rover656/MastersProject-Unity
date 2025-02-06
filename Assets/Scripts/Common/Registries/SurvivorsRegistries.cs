@@ -4,12 +4,17 @@ using Rover656.Survivors.Framework;
 namespace Rover656.Survivors.Common.Registries {
     public class SurvivorsRegistries : IRegistryProvider {
         public static SurvivorsRegistries Instance { get; } = new();
+        
+        public static RegistryKey<Item> Items { get; } = new("items");
 
         private readonly Dictionary<string, object> _registries = new();
         
         private SurvivorsRegistries() {
             var entityTypes = CreateRegistry(FrameworkRegistries.EntityTypes);
             EntityTypes.Register(entityTypes);
+
+            var items = CreateRegistry(Items);
+            Registries.Items.Register(items);
         }
 
         private Registry<T> CreateRegistry<T>(RegistryKey<T> registryKey) {
