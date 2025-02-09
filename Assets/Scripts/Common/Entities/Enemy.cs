@@ -20,7 +20,7 @@ namespace Rover656.Survivors.Common.Entities {
 
         public int Health { get; private set; }
         
-        public float InvincibilityDuration => 0.17f;
+        public float InvincibilityDuration => 0.25f;
         public float InvincibleUntil { get; private set; }
 
         public int MaxHealth { get; }

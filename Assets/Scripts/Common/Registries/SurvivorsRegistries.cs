@@ -3,9 +3,10 @@ using Rover656.Survivors.Framework;
 
 namespace Rover656.Survivors.Common.Registries {
     public class SurvivorsRegistries : IRegistryProvider {
-        public static SurvivorsRegistries Instance { get; } = new();
         
         public static RegistryKey<Item> Items { get; } = new("items");
+        
+        public static SurvivorsRegistries Instance { get; } = new();
 
         private readonly Dictionary<string, object> _registries = new();
         
