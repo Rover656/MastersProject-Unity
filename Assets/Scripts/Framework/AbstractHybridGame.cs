@@ -19,7 +19,7 @@ namespace Rover656.Survivors.Framework {
         // TODO: When connecting ensure the registries match.
         public IRegistryProvider Registries { get; }
 
-        protected NetManager NetManager { get; }
+        protected NetManager NetManager { get; set; }
         protected NetPeer NetPeer { get; set; }
         
         /// <summary>
@@ -38,6 +38,10 @@ namespace Rover656.Survivors.Framework {
         public Dictionary<object, List<AbstractEntity>> EntitiesByTag { get; } = new();
         public Dictionary<int, List<AbstractEntity>> EntitiesByPhysicsLayer { get; } = new();
 
+        private bool _shouldQueueEvents = false;
+        private Queue<AbstractEvent> _queuedEvents = new();
+        private object _queuedEventsLock = new();
+
         protected AbstractHybridGame(IRegistryProvider registries, NetManager netManager) {
             Registries = registries;
             NetManager = netManager;
@@ -52,17 +56,20 @@ namespace Rover656.Survivors.Framework {
                     writer.Put(value.x);
                     writer.Put(value.y);
                 },
-                (reader) => new Vector2(reader.GetFloat(), reader.GetFloat()));
+                (reader) => {
+                    var x = reader.GetFloat();
+                    var y = reader.GetFloat();
+                    return new Vector2(x, y);
+                });
             
             // Register event subscriptions
+            Subscribe<EntityMovementVectorChangedEvent>(OnEntityMovementVectorChanged);
             Subscribe<EntityPositionChangedEvent>(OnEntityPositionChanged);
             Subscribe<EntitySpawnEvent>(OnEntitySpawn, EntitySpawnEvent.Register);
             Subscribe<EntityDestroyedEvent>(OnEntityDestroyed);
         }
 
         public void Send<T>(T packet, DeliveryMethod deliveryMethod) where T : class, new() {
-            // TODO: Should we call the handle method for the provided packet too? Make all logic centralised around these messages?
-
             if (NetManager == null || NetPeer == null) {
                 return;
             }
@@ -79,8 +86,14 @@ namespace Rover656.Survivors.Framework {
                 handler(message);
             }
             
-            // Send over the network
-            Send(message.GetForNetwork(), message.NetworkDeliveryMethod);
+            // Send over the network, or queue if we're setting up a remote.
+            lock (_queuedEventsLock) {
+                if (_shouldQueueEvents) {
+                    _queuedEvents.Enqueue(message);
+                } else {
+                    Send(message.GetForNetwork(), message.NetworkDeliveryMethod);                    
+                }
+            }
         }
 
         protected void Subscribe<T>(Action<T> handler) where T : AbstractEvent, new() {
@@ -102,6 +115,70 @@ namespace Rover656.Survivors.Framework {
             _eventListeners[id] = obj => handler((T)obj);
             packetRegistrar(NetPacketProcessor, handler);
         }
+
+        /// <summary>
+        /// Use this to collect network messages when there isn't a remote peer.
+        /// This is used to fire any missed events once the initial game state is established remotely.
+        /// </summary>
+        protected void BeginNetworkEventQueue() {
+            if (_shouldQueueEvents) {
+                return;
+            }
+            
+            _shouldQueueEvents = true;
+        }
+
+        /// <summary>
+        /// Finishes queueing events and fires them all over the network to a remote peer (if present)
+        /// </summary>
+        protected void EndNetworkEventQueue() {
+            lock (_queuedEventsLock) {
+                while (_queuedEvents.Count > 0) {
+                    var queuedEvent = _queuedEvents.Dequeue();
+                    Send(queuedEvent.GetForNetwork(), queuedEvent.NetworkDeliveryMethod);
+                }
+
+                _queuedEvents.Clear();
+                _shouldQueueEvents = false;
+            }
+        }
+        
+        #endregion
+        
+        #region Spawn Remote Game
+        
+        private void ConnectToRemoteServer() {
+            // Immediately begin collecting any new events to update the remote state once it is established.
+            BeginNetworkEventQueue();
+        }
+
+        public void SerializeWorld(NetDataWriter writer) {
+            // Write all entities into the packet.
+            writer.Put(_entities.Count);
+            for (int i = 0; i < _entities.Count; i++) {
+                writer.Put(Registries.GetIdFrom(FrameworkRegistries.EntityTypes, _entities[i].Type));
+                _entities[i].Serialize(writer);
+            }
+            
+            SerializeAdditional(writer);
+        }
+
+        public void DeserializeWorld(NetDataReader reader) {
+            // Spawn all entities from the remote.
+            int entityCount = reader.GetInt();
+            for (int i = 0; i < entityCount; i++) {
+                int entityTypeId = reader.GetInt();
+                var entityType = Registries.GetFrom(FrameworkRegistries.EntityTypes, entityTypeId);
+                OnEntitySpawn(new EntitySpawnEvent() {
+                    Entity = entityType.FromNetwork(reader),
+                });
+            }
+            
+            DeserializeAdditional(reader);
+        }
+        
+        protected virtual void SerializeAdditional(NetDataWriter writer) {}
+        protected virtual void DeserializeAdditional(NetDataReader reader) {}
         
         #endregion
 
@@ -169,6 +246,15 @@ namespace Rover656.Survivors.Framework {
             collisionList.Add(spawnEvent.Entity);
             
             spawnEvent.Entity.Game = this;
+        }
+
+        protected void OnEntityMovementVectorChanged(EntityMovementVectorChangedEvent changedEvent) {
+            if (!_entitiesById.TryGetValue(changedEvent.EntityId, out var entity)) {
+                // Warn instead and some kind of recovery?
+                throw new InvalidOperationException("Entity does not exist!");
+            }
+            
+            entity.MovementVector = changedEvent.MovementVector;
         }
 
         protected void OnEntityPositionChanged(EntityPositionChangedEvent changedEvent) {

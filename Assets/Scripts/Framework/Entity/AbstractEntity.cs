@@ -52,13 +52,10 @@ namespace Rover656.Survivors.Framework.Entity {
                 return;
             }
 
-            MovementVector = movementVector;
-
-            // Send update to remote
-            Game.Send(new EntityMovementVectorUpdatePacket() {
+            Game.Post(new EntityMovementVectorChangedEvent() {
                 EntityId = Id,
-                MovementVector = MovementVector,
-            }, DeliveryMethod.ReliableOrdered);
+                MovementVector = movementVector,
+            });
         }
 
         protected virtual void OnGameAttached() {

@@ -1,4 +1,6 @@
+using System;
 using LiteNetLib;
+using LiteNetLib.Utils;
 using Rover656.Survivors.Common.Events;
 using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework;
@@ -38,7 +40,6 @@ namespace Rover656.Survivors.Client {
             _clientLevelManager?.DestroyEntity(entity);
         }
 
-        // TODO: Damage & Heal particles.
         protected override void OnEntityHealthChanged(EntityHealthChangedEvent healthChangedEvent)
         {
             base.OnEntityHealthChanged(healthChangedEvent);
@@ -49,5 +50,58 @@ namespace Rover656.Survivors.Client {
         }
 
         #endregion
+
+        public override void Update() {
+            // Poll incoming messages from the remote.
+            if (NetManager?.IsRunning ?? false) {
+                NetManager.PollEvents();
+            } else {
+                if (Mathf.Approximately(GameTime % 10f, Mathf.Epsilon)) {
+                    ConnectToRemoteServer();
+                }
+            }
+            
+            // Run default update logic.
+            base.Update();
+        }
+
+        private void ConnectToRemoteServer() {
+            // Immediately begin collecting any new events to update the remote state once it is established.
+            BeginNetworkEventQueue();
+            
+            var listener = new EventBasedNetListener();
+            listener.PeerConnectedEvent += OnPeerConnected;
+            listener.NetworkReceiveEvent += OnNetworkReceived;
+            listener.PeerDisconnectedEvent += OnPeerDisconnected;
+
+            NetManager = new NetManager(listener);
+            NetManager.Start();
+
+            var levelData = new NetDataWriter();
+            SerializeWorld(levelData);
+            
+            NetPeer = NetManager.Connect("127.0.0.1", 1337, levelData);
+        }
+
+        private void OnPeerConnected(NetPeer peer) {
+            if (peer.Id == NetPeer.Id) {
+                // Finish queueing messages for the remote and fire them all.
+                EndNetworkEventQueue();
+            }
+        }
+
+        private void OnNetworkReceived(NetPeer peer, NetPacketReader reader, byte channel,
+            DeliveryMethod deliveryMethod) {
+            NetPacketProcessor.ReadAllPackets(reader);
+        }
+
+        private void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo) {
+            if (peer.Id == NetPeer.Id) {
+                // The remote has disconnected.
+                NetManager.Stop();
+                NetManager = null;
+                NetPeer = null;
+            }
+        }
     }
 }

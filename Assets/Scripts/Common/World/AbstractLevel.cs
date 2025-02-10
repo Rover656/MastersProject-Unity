@@ -1,5 +1,5 @@
-using System;
 using LiteNetLib;
+using LiteNetLib.Utils;
 using Rover656.Survivors.Common.Entities;
 using Rover656.Survivors.Common.Events;
 using Rover656.Survivors.Common.Registries;
@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Rover656.Survivors.Common.World {
     public abstract class AbstractLevel : AbstractHybridGame<AbstractLevel> {
-        public float GameTime { get; set; }
+        public float GameTime { get; private set; }
 
         public Player Player { get; }
 
@@ -33,8 +33,8 @@ namespace Rover656.Survivors.Common.World {
             Player = AddNewEntity(EntityTypes.Player.Create());
 
             // Add an example enemy (will be the job of the director system soon)
-            AddNewEntity(EntityTypes.Bat.Create(), new Vector2(1, 2));
-            AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 1));
+            // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(1, 2));
+            // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 1));
             // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(1, 1));
             // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(0, 2));
             // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 0));
@@ -43,6 +43,20 @@ namespace Rover656.Survivors.Common.World {
         public override void Update() {
             GameTime += Time.deltaTime;
             base.Update();
+        }
+
+        protected override void SerializeAdditional(NetDataWriter writer) {
+            base.SerializeAdditional(writer);
+            
+            // TODO: How do we sync the time once the remote is established??
+            // Maybe the client should send a game time heartbeat?
+            writer.Put(GameTime);
+        }
+
+        protected override void DeserializeAdditional(NetDataReader reader) {
+            base.DeserializeAdditional(reader);
+            
+            GameTime = reader.GetFloat();
         }
 
         protected virtual void OnEntityHealthChanged(EntityHealthChangedEvent healthChangedEvent) {

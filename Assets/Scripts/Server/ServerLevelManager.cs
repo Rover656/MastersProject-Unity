@@ -25,7 +25,7 @@ namespace Rover656.Survivors.Server {
             _listener.PeerDisconnectedEvent += ListenerOnPeerDisconnectedEvent;
 
             _netManager = new NetManager(_listener);
-            _netManager.Start();
+            _netManager.Start(listeningPort);
         }
 
         private void OnDisable() {
@@ -50,8 +50,9 @@ namespace Rover656.Survivors.Server {
         }
 
         private void ListenerOnConnectionRequestEvent(ConnectionRequest request) {
-            // TODO: Unpack the level initialisation packet and create the server level representation.
-            throw new NotImplementedException();
+            var newLevel = new ServerLevel(_netManager);
+            newLevel.DeserializeWorld(request.Data);
+            _pendingLevels.Add(request.Accept(), newLevel);
         }
 
         private void ListenerOnPeerDisconnectedEvent(NetPeer peer, DisconnectInfo disconnectinfo) {
