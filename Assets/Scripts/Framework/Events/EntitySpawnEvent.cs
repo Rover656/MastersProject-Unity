@@ -5,15 +5,11 @@ using Rover656.Survivors.Framework.Entity;
 using Rover656.Survivors.Framework.EventBus;
 
 namespace Rover656.Survivors.Framework.Events {
-    public class EntitySpawnEvent : AbstractEvent {
+    public class EntitySpawnEvent : AbstractEvent, IPacketedEvent {
         
         public override DeliveryMethod NetworkDeliveryMethod => DeliveryMethod.ReliableOrdered;
         
         public AbstractEntity Entity { get; set; }
-
-        public override object GetForNetwork() {
-            return new Packet(Entity);
-        }
 
         public static void Register(NetPacketProcessor netPacketProcessor, Action<EntitySpawnEvent> handler) {
             // Use the underlying packet for transport.
@@ -24,7 +20,7 @@ namespace Rover656.Survivors.Framework.Events {
             });
         }
 
-        private class Packet : INetSerializable {
+        private class Packet {
             public int EntityTypeId { get; set; }
             public byte[] EntityData { get; set; }
 
@@ -46,14 +42,10 @@ namespace Rover656.Survivors.Framework.Events {
                 var entityType = game.Registries.GetFrom(FrameworkRegistries.EntityTypes, EntityTypeId);
                 return entityType.FromNetwork(new NetDataReader(EntityData));
             }
-            
-            public void Serialize(NetDataWriter writer) {
-                throw new NotImplementedException();
-            }
+        }
 
-            public void Deserialize(NetDataReader reader) {
-                throw new NotImplementedException();
-            }
+        public void SendPacket(IHybridGameAccess game) {
+            game.Send(new Packet(Entity), NetworkDeliveryMethod);
         }
     }
 }

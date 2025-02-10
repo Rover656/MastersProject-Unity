@@ -1,3 +1,4 @@
+using System;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using Rover656.Survivors.Common.Entities;
@@ -12,7 +13,7 @@ namespace Rover656.Survivors.Common.World {
     public abstract class AbstractLevel : AbstractHybridGame<AbstractLevel> {
         public float GameTime { get; private set; }
 
-        public Player Player { get; }
+        public Player Player { get; protected set; }
 
         public PhysicsSystem PhysicsSystem { get; }
         public DumbFollowerSystem DumbFollowerSystem { get; }
@@ -25,19 +26,9 @@ namespace Rover656.Survivors.Common.World {
             DamageSystem = AddSystem(new DamageSystem());
 
             // Subscribe to game events
-            SubscribeNetSerializable<EntityHealthChangedEvent>(OnEntityHealthChanged);
+            Subscribe<EntityHealthChangedEvent>(OnEntityHealthChanged, EntityHealthChangedEvent.Register);
             Subscribe<EntityDiedEvent>(OnEntityDied);
             Subscribe<PlayerCollectItemEvent>(OnPlayerCollectedItem, PlayerCollectItemEvent.Register);
-
-            // Spawn the player
-            Player = AddNewEntity(EntityTypes.Player.Create());
-
-            // Add an example enemy (will be the job of the director system soon)
-            // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(1, 2));
-            // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 1));
-            // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(1, 1));
-            // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(0, 2));
-            // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 0));
         }
 
         public override void Update() {
@@ -48,6 +39,9 @@ namespace Rover656.Survivors.Common.World {
         protected override void SerializeAdditional(NetDataWriter writer) {
             base.SerializeAdditional(writer);
             
+            // Save player Guid for during reconstruction
+            writer.Put(Player.Id);
+            
             // TODO: How do we sync the time once the remote is established??
             // Maybe the client should send a game time heartbeat?
             writer.Put(GameTime);
@@ -55,6 +49,9 @@ namespace Rover656.Survivors.Common.World {
 
         protected override void DeserializeAdditional(NetDataReader reader) {
             base.DeserializeAdditional(reader);
+            
+            var playerId = reader.GetGuid();
+            Player = (Player)GetEntity(playerId);
             
             GameTime = reader.GetFloat();
         }

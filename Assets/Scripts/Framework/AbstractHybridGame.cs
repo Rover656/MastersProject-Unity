@@ -39,7 +39,7 @@ namespace Rover656.Survivors.Framework {
         public Dictionary<int, List<AbstractEntity>> EntitiesByPhysicsLayer { get; } = new();
 
         private bool _shouldQueueEvents = false;
-        private Queue<AbstractEvent> _queuedEvents = new();
+        private Queue<Action> _queuedEvents = new();
         private object _queuedEventsLock = new();
 
         protected AbstractHybridGame(IRegistryProvider registries, NetManager netManager) {
@@ -81,7 +81,7 @@ namespace Rover656.Survivors.Framework {
         
         #region Event Bus
 
-        public void Post<T>(T message) where T : AbstractEvent {
+        public void Post<T>(T message) where T : AbstractEvent, new() {
             if (_eventListeners.TryGetValue(HashCache<T>.Id, out var handler)) {
                 handler(message);
             }
@@ -89,19 +89,23 @@ namespace Rover656.Survivors.Framework {
             // Send over the network, or queue if we're setting up a remote.
             lock (_queuedEventsLock) {
                 if (_shouldQueueEvents) {
-                    _queuedEvents.Enqueue(message);
+                    _queuedEvents.Enqueue(() => SendEventPacket(message));
                 } else {
-                    Send(message.GetForNetwork(), message.NetworkDeliveryMethod);                    
+                    SendEventPacket(message);
                 }
+            }
+        }
+        
+        private void SendEventPacket<T>(T message) where T : AbstractEvent, new() {
+            if (message is IPacketedEvent packetedEvent) {
+                packetedEvent.SendPacket(this);
+            } else {
+                Send(message, message.NetworkDeliveryMethod);                        
             }
         }
 
         protected void Subscribe<T>(Action<T> handler) where T : AbstractEvent, new() {
             Subscribe(handler, (packetProcessor, action) => packetProcessor.SubscribeReusable(action));
-        }
-
-        protected void SubscribeNetSerializable<T>(Action<T> handler) where T : AbstractEvent, INetSerializable, new() {
-            Subscribe(handler, (packetProcessor, action) => packetProcessor.SubscribeNetSerializable(action));
         }
 
         protected void Subscribe<T>(Action<T> handler, Action<NetPacketProcessor, Action<T>> packetRegistrar) where T : AbstractEvent {
@@ -135,7 +139,7 @@ namespace Rover656.Survivors.Framework {
             lock (_queuedEventsLock) {
                 while (_queuedEvents.Count > 0) {
                     var queuedEvent = _queuedEvents.Dequeue();
-                    Send(queuedEvent.GetForNetwork(), queuedEvent.NetworkDeliveryMethod);
+                    queuedEvent();
                 }
 
                 _queuedEvents.Clear();

@@ -44,7 +44,7 @@ namespace Rover656.Survivors.Server {
             //       purely within Unity with little effort, this will suffice.
             lock (_levelLock) {
                 foreach (var level in _levels) {
-                    level.Value.Update();
+                    // level.Value.Update();
                 }
             }
         }

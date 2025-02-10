@@ -2,6 +2,7 @@ using System;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using Rover656.Survivors.Common.Events;
+using Rover656.Survivors.Common.Registries;
 using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework;
 using Rover656.Survivors.Framework.Entity;
@@ -19,6 +20,16 @@ namespace Rover656.Survivors.Client {
 
         public ClientLevel(NetManager netManager, ClientLevelManager clientLevelManager) : base(netManager) {
             _clientLevelManager = clientLevelManager;
+            
+            // Spawn the player
+            Player = AddNewEntity(EntityTypes.Player.Create());
+
+            // Add an example enemy (will be the job of the director system soon)
+            AddNewEntity(EntityTypes.Bat.Create(), new Vector2(1, 2));
+            AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 1));
+            // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(1, 1));
+            // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(0, 2));
+            // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 0));
         }
         
         #region Unity Scene Updates

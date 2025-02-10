@@ -64,7 +64,7 @@ namespace Rover656.Survivors.Common.Systems
                     }
 
                     // Update position if no collision happened
-                    //entity.SetPosition(entity.Position + (velocity * deltaTime));
+                    entity.SetPosition(entity.Position + (velocity * deltaTime));
                 }
             }
         }

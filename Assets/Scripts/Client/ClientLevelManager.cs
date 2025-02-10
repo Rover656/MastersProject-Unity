@@ -70,6 +70,11 @@ namespace Rover656.Survivors.Client {
         
         public void SpawnEntity(AbstractEntity entity)
         {
+            // Will be captured after initialization
+            if (_level == null) {
+                return;
+            }
+            
             var entityTypeName = _level.Registries.GetNameFrom(FrameworkRegistries.EntityTypes, entity.Type);
             if (_entityPrefabMap.TryGetValue(entityTypeName, out var prefab))
             {
