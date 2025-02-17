@@ -13,6 +13,9 @@ namespace Rover656.Survivors.Common.Registries {
         private SurvivorsRegistries() {
             var entityTypes = CreateRegistry(FrameworkRegistries.EntityTypes);
             EntityTypes.Register(entityTypes);
+            
+            var systemTypes = CreateRegistry(FrameworkRegistries.GameSystemTypes);
+            SystemTypes.Register(systemTypes);
 
             var items = CreateRegistry(Items);
             Registries.Items.Register(items);

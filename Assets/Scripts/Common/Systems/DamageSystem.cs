@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using Rover656.Survivors.Common.Entities;
 using Rover656.Survivors.Common.Events;
+using Rover656.Survivors.Common.Registries;
 using Rover656.Survivors.Common.Utility;
 using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework;
+using Rover656.Survivors.Framework.Systems;
 
 namespace Rover656.Survivors.Common.Systems {
-    public class DamageSystem : IHybridSystem<AbstractLevel> {
-        public int SystemId => 3;
-        public bool IsActive { get; set; }
+    public class DamageSystem : IGameSystem<AbstractLevel> {
+        public GameSystemType Type => SystemTypes.Damage;
 
         // TODO: Maybe its worth having these tick at a fixed rate and handling that in the game.
         // That way when we account for network latency we can possibly run additional ticks to catch up?

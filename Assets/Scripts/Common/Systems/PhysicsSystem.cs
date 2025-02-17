@@ -1,7 +1,9 @@
 using System;
+using Rover656.Survivors.Common.Registries;
 using Rover656.Survivors.Common.Utility;
 using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework;
+using Rover656.Survivors.Framework.Systems;
 using UnityEngine;
 
 namespace Rover656.Survivors.Common.Systems
@@ -10,11 +12,9 @@ namespace Rover656.Survivors.Common.Systems
     /// The physics system handles entity movement & collision.
     /// This will not use Unity's systems for collision as the entities are not necessarily stored in a scene.
     /// </summary>
-    public class PhysicsSystem : IHybridSystem<AbstractLevel>
+    public class PhysicsSystem : IGameSystem<AbstractLevel>
     {
-        public int SystemId => 1;
-
-        public bool IsActive { get; set; }
+        public GameSystemType Type => SystemTypes.Physics;
 
         // public void Update(AbstractLevel abstractLevel, float deltaTime)
         // {

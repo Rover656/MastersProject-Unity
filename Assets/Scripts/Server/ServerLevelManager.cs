@@ -23,9 +23,22 @@ namespace Rover656.Survivors.Server {
             _listener.PeerConnectedEvent += ListenerOnPeerConnectedEvent;
             _listener.NetworkReceiveEvent += ListenerOnNetworkReceiveEvent;
             _listener.PeerDisconnectedEvent += ListenerOnPeerDisconnectedEvent;
+            _listener.NetworkLatencyUpdateEvent += ListenerOnNetworkLatencyUpdateEvent;
 
             _netManager = new NetManager(_listener);
             _netManager.Start(listeningPort);
+        }
+
+        private void ListenerOnNetworkLatencyUpdateEvent(NetPeer peer, int latency)
+        {
+            // latency in MS
+            lock (_levelLock)
+            {
+                if (_levels.TryGetValue(peer, out var level))
+                {
+                    level.PeerNetworkDelay = latency / 1000f;
+                }
+            }
         }
 
         private void OnDisable() {
@@ -44,15 +57,18 @@ namespace Rover656.Survivors.Server {
             //       purely within Unity with little effort, this will suffice.
             lock (_levelLock) {
                 foreach (var level in _levels) {
-                    // level.Value.Update();
+                    level.Value.Update();
                 }
             }
         }
 
-        private void ListenerOnConnectionRequestEvent(ConnectionRequest request) {
-            var newLevel = new ServerLevel(_netManager);
+        private void ListenerOnConnectionRequestEvent(ConnectionRequest request)
+        {
+            var peer = request.Accept();
+            var newLevel = new ServerLevel(_netManager, peer);
             newLevel.DeserializeWorld(request.Data);
-            _pendingLevels.Add(request.Accept(), newLevel);
+            
+            _pendingLevels.Add(peer, newLevel);
         }
 
         private void ListenerOnPeerDisconnectedEvent(NetPeer peer, DisconnectInfo disconnectinfo) {

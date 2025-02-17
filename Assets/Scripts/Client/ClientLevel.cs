@@ -8,13 +8,13 @@ using Rover656.Survivors.Framework;
 using Rover656.Survivors.Framework.Entity;
 using Rover656.Survivors.Framework.Events;
 using UnityEngine;
+using Environment = Rover656.Survivors.Framework.Environment;
 
 namespace Rover656.Survivors.Client {
     public class ClientLevel : AbstractLevel {
         public override SystemEnvironment SystemEnvironment => SystemEnvironment.Local;
 
-        // As the local system, we do not need to account for networking delay.
-        public override float NetworkDelay => 0;
+        public override Environment Environment => Environment.Local;
 
         private readonly ClientLevelManager _clientLevelManager;
 

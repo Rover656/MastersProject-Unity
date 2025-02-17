@@ -1,15 +1,16 @@
 using System.Linq;
 using Rover656.Survivors.Common.Entities;
+using Rover656.Survivors.Common.Registries;
 using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework;
+using Rover656.Survivors.Framework.Systems;
 
 namespace Rover656.Survivors.Common.Systems.EnemyMovement
 {
-    public class DumbFollowerSystem : IHybridSystem<AbstractLevel>
+    public class DumbFollowerSystem : IGameSystem<AbstractLevel>
     {
-        public int SystemId => 2;
-        public bool IsActive { get; set; }
-        
+        public GameSystemType Type => SystemTypes.DumbFollower;
+
         public void Update(AbstractLevel abstractLevel, float deltaTime)
         {
             if (!abstractLevel.EntitiesByTag.TryGetValue(EnemyMovementTag.DumbFollower, out var enemies))

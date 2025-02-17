@@ -8,10 +8,15 @@ using Rover656.Survivors.Common.Systems;
 using Rover656.Survivors.Common.Systems.EnemyMovement;
 using Rover656.Survivors.Framework;
 using UnityEngine;
+using Environment = Rover656.Survivors.Framework.Environment;
 
 namespace Rover656.Survivors.Common.World {
     public abstract class AbstractLevel : AbstractHybridGame<AbstractLevel> {
-        public float GameTime { get; private set; }
+        public virtual float GameTime { get; protected set; }
+
+        private float _deltaTime;
+
+        public override float DeltaTime => _deltaTime;
 
         public Player Player { get; protected set; }
 
@@ -32,8 +37,29 @@ namespace Rover656.Survivors.Common.World {
         }
 
         public override void Update() {
-            GameTime += Time.deltaTime;
+            _deltaTime = Time.deltaTime;
+            
+            // Client handles time advancement.
+            if (Environment == Environment.Local)
+            {
+                GameTime += DeltaTime;
+            }
+
             base.Update();
+        }
+
+        protected override void SerializeTickMeta(NetDataWriter writer)
+        {
+            base.SerializeTickMeta(writer);
+            writer.Put(GameTime);
+        }
+
+        protected override void DeserializeTickMeta(NetDataReader reader)
+        {
+            base.DeserializeTickMeta(reader);
+            float newGameTime = reader.GetFloat();
+            // _deltaTime = newGameTime - GameTime;
+            GameTime = newGameTime;
         }
 
         protected override void SerializeAdditional(NetDataWriter writer) {

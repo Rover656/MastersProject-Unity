@@ -5,6 +5,7 @@ using LiteNetLib.Utils;
 using Rover656.Survivors.Framework.Entity;
 using Rover656.Survivors.Framework.EventBus;
 using Rover656.Survivors.Framework.Events;
+using Rover656.Survivors.Framework.Systems;
 using UnityEngine;
 
 namespace Rover656.Survivors.Framework {
@@ -14,20 +15,24 @@ namespace Rover656.Survivors.Framework {
     /// </summary>
     public abstract class AbstractHybridGame<TGame> : IHybridGameAccess where TGame : AbstractHybridGame<TGame> {
         public abstract SystemEnvironment SystemEnvironment { get; }
-        public abstract float NetworkDelay { get; }
         
         // TODO: When connecting ensure the registries match.
         public IRegistryProvider Registries { get; }
 
+        public abstract Environment Environment { get; }
+        
         protected NetManager NetManager { get; set; }
         protected NetPeer NetPeer { get; set; }
+        
+        public abstract float DeltaTime { get; }
         
         /// <summary>
         /// When handling packets, always provide the game as userdatum.
         /// </summary>
         public NetPacketProcessor NetPacketProcessor { get; } = new();
-
-        private readonly List<IHybridSystem<TGame>> _systems = new();
+        
+        private readonly Dictionary<GameSystemType, IGameSystem<TGame>> _systems = new();
+        private readonly HashSet<GameSystemType> _activeSystemTypes = new();
 
         private readonly List<AbstractEntity> _entities = new();
         private readonly Dictionary<Guid, AbstractEntity> _entitiesById = new();
@@ -63,6 +68,8 @@ namespace Rover656.Survivors.Framework {
                 });
             
             // Register event subscriptions
+            Subscribe<GameTickEvent>(Handle);
+            Subscribe<GameSystemActivationEvent>(Handle, GameSystemActivationEvent.Register);
             Subscribe<EntityMovementVectorChangedEvent>(OnEntityMovementVectorChanged);
             Subscribe<EntityPositionChangedEvent>(OnEntityPositionChanged);
             Subscribe<EntitySpawnEvent>(OnEntitySpawn, EntitySpawnEvent.Register);
@@ -185,12 +192,37 @@ namespace Rover656.Survivors.Framework {
         protected virtual void DeserializeAdditional(NetDataReader reader) {}
         
         #endregion
+        
+        #region Systems & Schedulling
 
         protected THybridSystem AddSystem<THybridSystem>(THybridSystem system)
-            where THybridSystem : IHybridSystem<TGame> {
-            _systems.Add(system);
+            where THybridSystem : IGameSystem<TGame> {
+            if (!_systems.TryAdd(system.Type, system))
+            {
+                throw new ArgumentException("A system is already added for this system type.");
+            }
+
+            // Systems always active on client to start with.
+            SetSystemEnvironment(system.Type, Environment.Local);
+            
             return system;
         }
+
+        protected void SetSystemEnvironment(GameSystemType type, Environment targetEnvironment)
+        {
+            if (type.EnvironmentConstraint == EnvironmentConstraint.LocalOnly && targetEnvironment != Environment.Local)
+            {
+                throw new InvalidOperationException("Cannot move LocalOnly system to the Remote!");
+            }
+            
+            Post(new GameSystemActivationEvent
+            {
+                Type = type,
+                ActiveEnvironment = targetEnvironment,
+            });
+        }
+        
+        #endregion
 
         public AbstractEntity GetEntity(Guid entityId) {
             return _entitiesById[entityId];
@@ -219,13 +251,60 @@ namespace Rover656.Survivors.Framework {
         }
 
         public virtual void Update() {
+            if (Environment == Environment.Local) {
+                // Fire game tick.
+                var meta = new NetDataWriter();
+                SerializeTickMeta(meta);
+                Post(new GameTickEvent
+                {
+                    MetaData = meta.Data,
+                });
+            }
+            
             // Update all systems.
-            foreach (var system in _systems) {
-                system.Update((TGame)this, Time.deltaTime);
+            foreach (var systemType in _activeSystemTypes)
+            {
+                if (_systems.TryGetValue(systemType, out var system))
+                {
+                    system.Update((TGame)this, DeltaTime);
+                }
+            }
+        }
+        
+        // region Game tick metadata
+
+        protected virtual void SerializeTickMeta(NetDataWriter writer)
+        {
+        }
+
+        protected virtual void DeserializeTickMeta(NetDataReader reader)
+        {
+        }
+        
+        // endregion
+
+        #region Network handlers
+
+        protected void Handle(GameTickEvent tickEvent)
+        {
+            // Only the remote receives tick metadata.
+            if (Environment == Environment.Remote)
+            {
+                DeserializeTickMeta(new NetDataReader(tickEvent.MetaData));
             }
         }
 
-        #region Network handlers
+        private void Handle(GameSystemActivationEvent systemActivationEvent)
+        {
+            if (systemActivationEvent.ActiveEnvironment == Environment)
+            {
+                _activeSystemTypes.Add(systemActivationEvent.Type);
+            }
+            else
+            {
+                _activeSystemTypes.Remove(systemActivationEvent.Type);
+            }
+        }
 
         protected virtual void OnEntitySpawn(EntitySpawnEvent spawnEvent) {
             _entities.Add(spawnEvent.Entity);

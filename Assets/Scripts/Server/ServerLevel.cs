@@ -7,10 +7,16 @@ namespace Rover656.Survivors.Server
     public class ServerLevel : AbstractLevel
     {
         public override SystemEnvironment SystemEnvironment => SystemEnvironment.Remote;
-        public override float NetworkDelay => 0f; // TODO
         
-        public ServerLevel(NetManager netManager) : base(netManager)
+        public float PeerNetworkDelay { get; set; }
+        
+        public override Environment Environment => Environment.Remote;
+
+        public override float DeltaTime => base.DeltaTime + PeerNetworkDelay;
+
+        public ServerLevel(NetManager netManager, NetPeer peer) : base(netManager)
         {
+            NetPeer = peer;
         }
     }
 }
