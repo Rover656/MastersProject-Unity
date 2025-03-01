@@ -8,7 +8,7 @@ using Rover656.Survivors.Common.Systems;
 using Rover656.Survivors.Common.Systems.EnemyMovement;
 using Rover656.Survivors.Framework;
 using UnityEngine;
-using Environment = Rover656.Survivors.Framework.Environment;
+using Environment = Rover656.Survivors.Framework.Systems.Environment;
 
 namespace Rover656.Survivors.Common.World {
     public abstract class AbstractLevel : AbstractHybridGame<AbstractLevel> {

@@ -33,6 +33,14 @@ namespace Rover656.Survivors.Common.Systems
 
         public void Update(AbstractLevel abstractLevel, float deltaTime)
         {
+            // Fake load to try and cause a performance impact.
+            // counter exists to ensure this loop has a side effect
+            // ulong counter = 0;
+            // for (ulong i = 0; i < 50_000_000; i++)
+            // {
+            //     counter += i;
+            // }
+            
             foreach (var layer in abstractLevel.EntitiesByPhysicsLayer.Keys)
             {
                 foreach (var entity in abstractLevel.EntitiesByPhysicsLayer[layer])

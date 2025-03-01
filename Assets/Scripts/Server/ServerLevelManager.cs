@@ -80,7 +80,7 @@ namespace Rover656.Survivors.Server {
         private void ListenerOnNetworkReceiveEvent(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliverymethod) {
             // Propagate events into the level.
             lock (_levelLock) {
-                _levels[peer].NetPacketProcessor.ReadAllPackets(reader);
+                _levels[peer].NetPacketProcessor.ReadAllPackets(reader, _levels[peer]);
             }
         }
 

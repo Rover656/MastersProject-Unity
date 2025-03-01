@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using Rover656.Survivors.Framework.Entity;
@@ -7,6 +8,7 @@ using Rover656.Survivors.Framework.EventBus;
 using Rover656.Survivors.Framework.Events;
 using Rover656.Survivors.Framework.Systems;
 using UnityEngine;
+using Environment = Rover656.Survivors.Framework.Systems.Environment;
 
 namespace Rover656.Survivors.Framework {
     // TODO: Methods to serialize the entire game state for a large initialization packet.
@@ -46,6 +48,11 @@ namespace Rover656.Survivors.Framework {
         private bool _shouldQueueEvents = false;
         private Queue<Action> _queuedEvents = new();
         private object _queuedEventsLock = new();
+        
+        // Performance metrics
+        private int _updatesPerSecond;
+        private int _updatesThisSecond;
+        private float _updateTimeCounter;
 
         protected AbstractHybridGame(IRegistryProvider registries, NetManager netManager) {
             Registries = registries;
@@ -195,6 +202,36 @@ namespace Rover656.Survivors.Framework {
         
         #region Systems & Schedulling
 
+        private void TryOffloadSystem()
+        {
+            var mostImpactfulSystemType = _activeSystemTypes
+                .Where(e => e.EnvironmentConstraint != EnvironmentConstraint.LocalOnly)
+                .OrderBy(x => x)
+                .FirstOrDefault();
+
+            if (mostImpactfulSystemType != null)
+            {
+                string name = Registries.GetNameFrom(FrameworkRegistries.GameSystemTypes, mostImpactfulSystemType);
+                Debug.Log($"Game system {name} has been offloaded.");
+                
+                SetSystemEnvironment(mostImpactfulSystemType, Environment.Remote);
+            }
+        }
+
+        private void TryOnloadSystem()
+        {
+            var leastImpactfulSystemType = Registries.Get(FrameworkRegistries.GameSystemTypes).Entries
+                .Where(e => !_activeSystemTypes.Contains(e))
+                .Where(e => e.EnvironmentConstraint != EnvironmentConstraint.LocalOnly)
+                .OrderByDescending(x => x)
+                .FirstOrDefault();
+
+            if (leastImpactfulSystemType != null)
+            {
+                SetSystemEnvironment(leastImpactfulSystemType, Environment.Local);
+            }
+        }
+
         protected THybridSystem AddSystem<THybridSystem>(THybridSystem system)
             where THybridSystem : IGameSystem<TGame> {
             if (!_systems.TryAdd(system.Type, system))
@@ -251,6 +288,22 @@ namespace Rover656.Survivors.Framework {
         }
 
         public virtual void Update() {
+            // Performance timing
+            _updateTimeCounter += Time.deltaTime;
+            _updatesThisSecond++;
+
+            if (_updateTimeCounter > 1.0f)
+            {
+                // Debug.Log($"Updates this second were: {_updatesThisSecond}");
+                
+                // Computes average.
+                _updatesPerSecond = Mathf.FloorToInt((_updatesPerSecond + _updatesThisSecond) / (1 + _updateTimeCounter));
+                _updateTimeCounter = 0;
+                _updatesThisSecond = 0;
+                
+                // Debug.Log($"Updates per second updated to: {_updatesPerSecond}");
+            }
+            
             if (Environment == Environment.Local) {
                 // Fire game tick.
                 var meta = new NetDataWriter();
@@ -262,6 +315,7 @@ namespace Rover656.Survivors.Framework {
             }
             
             // Update all systems.
+            float systemStartTime = Time.realtimeSinceStartup;
             foreach (var systemType in _activeSystemTypes)
             {
                 if (_systems.TryGetValue(systemType, out var system))
@@ -269,6 +323,24 @@ namespace Rover656.Survivors.Framework {
                     system.Update((TGame)this, DeltaTime);
                 }
             }
+
+            float systemEndTime = Time.realtimeSinceStartup;
+            float systemRunTime = systemEndTime - systemStartTime;
+
+            // Local makes decisions on system load
+            if (Environment == Environment.Local)
+            {
+                if (systemRunTime > 0.0001f)
+                {
+                    TryOffloadSystem();
+                }
+                else if (systemRunTime < 0.0000001f)
+                {
+                    TryOnloadSystem();
+                }
+            }
+            
+            // Debug.Log($"System execution time: {systemEndTime - systemStartTime} secs");
         }
         
         // region Game tick metadata

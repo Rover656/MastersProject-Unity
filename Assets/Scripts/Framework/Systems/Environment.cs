@@ -1,4 +1,4 @@
-namespace Rover656.Survivors.Framework
+namespace Rover656.Survivors.Framework.Systems
 {
     public enum Environment
     {

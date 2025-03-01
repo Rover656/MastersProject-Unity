@@ -8,7 +8,7 @@ namespace Rover656.Survivors.Common.Registries
         public static GameSystemType DumbFollower = new(EnvironmentConstraint.HybridAny, 0);
         public static GameSystemType Damage = new(EnvironmentConstraint.HybridAny, 0);
         public static GameSystemType Director = new(EnvironmentConstraint.PreferLocal, 0);
-        public static GameSystemType ParticleLifetime = new(EnvironmentConstraint.PreferRemote, 0);
+        public static GameSystemType ParticleLifetime = new(EnvironmentConstraint.PreferLocal, 0);
         public static GameSystemType Physics = new(EnvironmentConstraint.PreferLocal, 0);
         public static GameSystemType Weapon = new(EnvironmentConstraint.PreferLocal, 0);
         

@@ -4,6 +4,7 @@ using LiteNetLib.Utils;
 using NUnit;
 using Rover656.Survivors.Framework.EventBus;
 using Rover656.Survivors.Framework.Systems;
+using Environment = Rover656.Survivors.Framework.Systems.Environment;
 
 namespace Rover656.Survivors.Framework.Events
 {

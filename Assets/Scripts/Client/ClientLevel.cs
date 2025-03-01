@@ -8,7 +8,7 @@ using Rover656.Survivors.Framework;
 using Rover656.Survivors.Framework.Entity;
 using Rover656.Survivors.Framework.Events;
 using UnityEngine;
-using Environment = Rover656.Survivors.Framework.Environment;
+using Environment = Rover656.Survivors.Framework.Systems.Environment;
 
 namespace Rover656.Survivors.Client {
     public class ClientLevel : AbstractLevel {
@@ -103,7 +103,7 @@ namespace Rover656.Survivors.Client {
 
         private void OnNetworkReceived(NetPeer peer, NetPacketReader reader, byte channel,
             DeliveryMethod deliveryMethod) {
-            NetPacketProcessor.ReadAllPackets(reader);
+            NetPacketProcessor.ReadAllPackets(reader, this);
         }
 
         private void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo) {
