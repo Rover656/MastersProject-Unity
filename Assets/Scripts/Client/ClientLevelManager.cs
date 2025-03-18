@@ -5,6 +5,7 @@ using Rover656.Survivors.Common.Entities;
 using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework;
 using Rover656.Survivors.Framework.Entity;
+using Terresquall;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -48,25 +49,34 @@ namespace Rover656.Survivors.Client {
 
         private void Update() {
             // TODO: Temporary input logic for player
-            Vector2 playerMovementVector = Vector2.zero;
-            if (Input.GetKey(KeyCode.W)) {
-                playerMovementVector.y += 1;
+            
+            Vector2 joyInput = VirtualJoystick.GetAxis();
+            if (joyInput.magnitude > 0)
+            {
+                _level.Player.SetMovementVector(joyInput.normalized);
             }
+            else
+            {
+                Vector2 playerMovementVector = Vector2.zero;
+                if (Input.GetKey(KeyCode.W)) {
+                    playerMovementVector.y += 1;
+                }
 
-            if (Input.GetKey(KeyCode.S)) {
-                playerMovementVector.y -= 1;
+                if (Input.GetKey(KeyCode.S)) {
+                    playerMovementVector.y -= 1;
+                }
+
+                if (Input.GetKey(KeyCode.A)) {
+                    playerMovementVector.x -= 1;
+                }
+
+                if (Input.GetKey(KeyCode.D)) {
+                    playerMovementVector.x += 1;
+                }
+                
+                playerMovementVector.Normalize();
+                _level.Player.SetMovementVector(playerMovementVector);
             }
-
-            if (Input.GetKey(KeyCode.A)) {
-                playerMovementVector.x -= 1;
-            }
-
-            if (Input.GetKey(KeyCode.D)) {
-                playerMovementVector.x += 1;
-            }
-
-            playerMovementVector.Normalize();
-            _level.Player.SetMovementVector(playerMovementVector);
             
             // Trigger level updates.
             _level.Update();
