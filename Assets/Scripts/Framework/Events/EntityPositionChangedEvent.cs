@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Rover656.Survivors.Framework.Events {
     public class EntityPositionChangedEvent : AbstractEvent {
-        public override DeliveryMethod NetworkDeliveryMethod => DeliveryMethod.ReliableSequenced;
+        public override DeliveryMethod NetworkDeliveryMethod => DeliveryMethod.ReliableOrdered;
         
         public Guid EntityId { get; set; }
         

@@ -17,6 +17,18 @@ namespace Rover656.Survivors.Common {
             return (T)_components[type];
         }
 
+        public bool TryGetComponent<T>(ItemComponentType<T> type, out T value)
+        {
+            if (HasComponent(type))
+            {
+                value = GetComponent(type);
+                return true;
+            }
+
+            value = default;
+            return false;
+        }
+
         public static Factory Create() {
             return new Factory();
         }

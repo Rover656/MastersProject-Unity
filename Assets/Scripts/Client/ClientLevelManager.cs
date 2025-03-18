@@ -7,10 +7,13 @@ using Rover656.Survivors.Framework;
 using Rover656.Survivors.Framework.Entity;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Rover656.Survivors.Client {
     public class ClientLevelManager : MonoBehaviour {
         private ClientLevel _level;
+        
+        public ClientLevel Level => _level;
         
         [Serializable]
         public struct NamedPrefab {
@@ -26,7 +29,8 @@ namespace Rover656.Survivors.Client {
         // Map between entity ID and GameObject.
         private readonly Dictionary<Guid, GameObject> _gameObjects = new();
 
-        private void Start() {
+        private void Start()
+        {
             // Copy KVP from Unity into index
             foreach (var pair in entityPrefabs)
             {

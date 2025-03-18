@@ -12,8 +12,8 @@ namespace Rover656.Survivors.Framework {
         private readonly Dictionary<T, string> _nameLookup = new();
         
         public RegistryKey<T> Key { get; }
-        
-        public IEnumerable<T> Entries { get; }
+
+        public IEnumerable<T> Entries => _entries;
 
         public Registry(RegistryKey<T> key) {
             Key = key;

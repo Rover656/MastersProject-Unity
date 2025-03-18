@@ -1,4 +1,3 @@
-using System;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using Rover656.Survivors.Common.Entities;
@@ -9,6 +8,7 @@ using Rover656.Survivors.Common.Systems.EnemyMovement;
 using Rover656.Survivors.Framework;
 using UnityEngine;
 using Environment = Rover656.Survivors.Framework.Systems.Environment;
+using ParticleSystem = Rover656.Survivors.Common.Systems.ParticleSystem;
 
 namespace Rover656.Survivors.Common.World {
     public abstract class AbstractLevel : AbstractHybridGame<AbstractLevel> {
@@ -23,12 +23,16 @@ namespace Rover656.Survivors.Common.World {
         public PhysicsSystem PhysicsSystem { get; }
         public DumbFollowerSystem DumbFollowerSystem { get; }
         public DamageSystem DamageSystem { get; }
+        public WeaponSystem WeaponSystem { get; }
+        public ParticleSystem ParticleSystem { get; }
 
         protected AbstractLevel(NetManager netManager) : base(SurvivorsRegistries.Instance, netManager) {
             // Register all systems.
             PhysicsSystem = AddSystem(new PhysicsSystem());
             DumbFollowerSystem = AddSystem(new DumbFollowerSystem());
             DamageSystem = AddSystem(new DamageSystem());
+            WeaponSystem = AddSystem(new WeaponSystem());
+            ParticleSystem = AddSystem(new ParticleSystem());
 
             // Subscribe to game events
             Subscribe<EntityHealthChangedEvent>(OnEntityHealthChanged, EntityHealthChangedEvent.Register);
@@ -48,6 +52,13 @@ namespace Rover656.Survivors.Common.World {
             base.Update();
         }
 
+        public bool EveryNSeconds(float seconds)
+        {
+            return Mathf.FloorToInt(GameTime) !=
+                   Mathf.FloorToInt(GameTime - DeltaTime) &&
+                   Mathf.FloorToInt(GameTime) % seconds == 0;
+        }
+        
         protected override void SerializeTickMeta(NetDataWriter writer)
         {
             base.SerializeTickMeta(writer);

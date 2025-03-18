@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using LiteNetLib;
 using LiteNetLib.Utils;
@@ -8,6 +9,7 @@ using Rover656.Survivors.Framework.EventBus;
 using Rover656.Survivors.Framework.Events;
 using Rover656.Survivors.Framework.Systems;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 using Environment = Rover656.Survivors.Framework.Systems.Environment;
 
 namespace Rover656.Survivors.Framework {
@@ -45,7 +47,7 @@ namespace Rover656.Survivors.Framework {
         public Dictionary<object, List<AbstractEntity>> EntitiesByTag { get; } = new();
         public Dictionary<int, List<AbstractEntity>> EntitiesByPhysicsLayer { get; } = new();
 
-        private bool _shouldQueueEvents = false;
+        private bool _shouldQueueEvents;
         private Queue<Action> _queuedEvents = new();
         private object _queuedEventsLock = new();
         
@@ -101,13 +103,25 @@ namespace Rover656.Survivors.Framework {
             }
             
             // Send over the network, or queue if we're setting up a remote.
-            lock (_queuedEventsLock) {
-                if (_shouldQueueEvents) {
+            
+            if (_shouldQueueEvents) {
+                lock (_queuedEventsLock)
+                {
                     _queuedEvents.Enqueue(() => SendEventPacket(message));
-                } else {
-                    SendEventPacket(message);
                 }
             }
+            else
+            {
+                SendEventPacket(message);
+            }
+            
+            // lock (_queuedEventsLock) {
+            //     if (_shouldQueueEvents) {
+            //         _queuedEvents.Enqueue(() => SendEventPacket(message));
+            //     } else {
+            //         SendEventPacket(message);
+            //     }
+            // }
         }
         
         private void SendEventPacket<T>(T message) where T : AbstractEvent, new() {
@@ -164,11 +178,6 @@ namespace Rover656.Survivors.Framework {
         #endregion
         
         #region Spawn Remote Game
-        
-        private void ConnectToRemoteServer() {
-            // Immediately begin collecting any new events to update the remote state once it is established.
-            BeginNetworkEventQueue();
-        }
 
         public void SerializeWorld(NetDataWriter writer) {
             // Write all entities into the packet.
@@ -204,6 +213,11 @@ namespace Rover656.Survivors.Framework {
 
         private void TryOffloadSystem()
         {
+            if (NetManager is null || NetManager.IsRunning)
+            {
+                return;
+            }
+            
             var mostImpactfulSystemType = _activeSystemTypes
                 .Where(e => e.EnvironmentConstraint != EnvironmentConstraint.LocalOnly)
                 .OrderBy(x => x)
@@ -228,7 +242,18 @@ namespace Rover656.Survivors.Framework {
 
             if (leastImpactfulSystemType != null)
             {
+                string name = Registries.GetNameFrom(FrameworkRegistries.GameSystemTypes, leastImpactfulSystemType);
+                Debug.Log($"Game system {name} has been onloaded.");
+                
                 SetSystemEnvironment(leastImpactfulSystemType, Environment.Local);
+            }
+        }
+
+        protected void ForceOnloadAll()
+        {
+            foreach (var type in Registries.Get(FrameworkRegistries.GameSystemTypes).Entries)
+            {
+                SetSystemEnvironment(type, Environment.Local);
             }
         }
 
@@ -262,6 +287,10 @@ namespace Rover656.Survivors.Framework {
         #endregion
 
         public AbstractEntity GetEntity(Guid entityId) {
+            if (!_entitiesById.ContainsKey(entityId)) {
+                return null;
+            }
+            
             return _entitiesById[entityId];
         }
 
@@ -330,7 +359,8 @@ namespace Rover656.Survivors.Framework {
             // Local makes decisions on system load
             if (Environment == Environment.Local)
             {
-                if (systemRunTime > 0.0001f)
+                // TODO: REENABLE. THERE IS A PROBLEM.
+                if (systemRunTime > 0.001f)
                 {
                     TryOffloadSystem();
                 }
@@ -379,6 +409,8 @@ namespace Rover656.Survivors.Framework {
         }
 
         protected virtual void OnEntitySpawn(EntitySpawnEvent spawnEvent) {
+            Debug.Log($"Spawning entity {spawnEvent.Entity.Id} on {Environment}");
+            
             _entities.Add(spawnEvent.Entity);
             _entitiesById.Add(spawnEvent.Entity.Id, spawnEvent.Entity);
 
@@ -386,7 +418,7 @@ namespace Rover656.Survivors.Framework {
             {
                 if (!EntitiesByTag.TryGetValue(tag, out var tagList))
                 {
-                    tagList = new();
+                    tagList = new List<AbstractEntity>();
                     EntitiesByTag.Add(tag, tagList);
                 }
                 
@@ -405,8 +437,8 @@ namespace Rover656.Survivors.Framework {
 
         protected void OnEntityMovementVectorChanged(EntityMovementVectorChangedEvent changedEvent) {
             if (!_entitiesById.TryGetValue(changedEvent.EntityId, out var entity)) {
-                // Warn instead and some kind of recovery?
-                throw new InvalidOperationException("Entity does not exist!");
+                Debug.LogWarning($"Received movement vector change for non-existent entity {changedEvent.EntityId} on {Environment}.");
+                return;
             }
             
             entity.MovementVector = changedEvent.MovementVector;
@@ -414,8 +446,8 @@ namespace Rover656.Survivors.Framework {
 
         protected void OnEntityPositionChanged(EntityPositionChangedEvent changedEvent) {
             if (!_entitiesById.TryGetValue(changedEvent.EntityId, out var entity)) {
-                // Warn instead and some kind of recovery?
-                throw new InvalidOperationException("Entity does not exist!");
+                Debug.LogWarning($"Received position change for non-existent entity {changedEvent.EntityId} on {Environment}.");
+                return;
             }
             
             OnEntityPositionChanged(entity, changedEvent.Position);
@@ -427,9 +459,9 @@ namespace Rover656.Survivors.Framework {
         }
 
         protected void OnEntityDestroyed(EntityDestroyedEvent destroyedEvent) {
-            if (!_entitiesById.TryGetValue(destroyedEvent.EntityId, out var entity)) {
-                // Warn instead and some kind of recovery?
-                throw new InvalidOperationException("Entity does not exist!");
+            if (!_entitiesById.TryGetValue(destroyedEvent.EntityId, out var entity))
+            {
+                return;
             }
             
             OnEntityDestroyed(entity);

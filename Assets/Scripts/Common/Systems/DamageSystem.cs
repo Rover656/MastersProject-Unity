@@ -21,7 +21,7 @@ namespace Rover656.Survivors.Common.Systems {
                 return;
             }
 
-            if (!abstractLevel.EntitiesByTag.TryGetValue(GeneralEntityTags.Damageable, out var damagers)) {
+            if (!abstractLevel.EntitiesByTag.TryGetValue(GeneralEntityTags.Damager, out var damagers)) {
                 return;
             }
 
@@ -36,6 +36,12 @@ namespace Rover656.Survivors.Common.Systems {
                 }
 
                 foreach (var damageableEntity in damageables) {
+                    // No self damage
+                    if (damageSourceEntity == damageableEntity)
+                    {
+                        continue;
+                    }
+                    
                     if (damageableEntity is not IDamageable damageable) {
                         continue;
                     }

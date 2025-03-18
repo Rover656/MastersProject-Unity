@@ -2382,7 +2382,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: tilemap_packed_103
+      name: knife
       rect:
         serializedVersion: 2
         x: 112
@@ -2448,7 +2448,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: tilemap_packed_106
+      name: sword
       rect:
         serializedVersion: 2
         x: 160
@@ -2690,7 +2690,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: tilemap_packed_117
+      name: hamme
       rect:
         serializedVersion: 2
         x: 144
@@ -2712,7 +2712,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: tilemap_packed_118
+      name: battleaxe
       rect:
         serializedVersion: 2
         x: 160
@@ -2734,7 +2734,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: tilemap_packed_119
+      name: axe
       rect:
         serializedVersion: 2
         x: 176
@@ -2976,7 +2976,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: tilemap_packed_130
+      name: staff
       rect:
         serializedVersion: 2
         x: 160
@@ -3034,12 +3034,16 @@ TextureImporter:
       entries: []
     nameFileIdTable:
       archer: 62273825
+      axe: 1857904738
       bat: -167083037
+      battleaxe: 1905617758
       crab: 1561850950
       cyclops: -1247423563
       dude: -547594784
       ghost: -862990982
       green_ghost: 775098435
+      hamme: 1414518593
+      knife: 1076634773
       knight: -1689136738
       knight_face: -1192458126
       knight_no_helm: -62544333
@@ -3048,24 +3052,21 @@ TextureImporter:
       rat: 346633133
       rune_wizard: -1603050055
       spider: 406851725
+      staff: 1905661471
+      sword: -61277816
       tilemap_packed_0: -1453350334737186109
       tilemap_packed_1: -5773244093850934461
       tilemap_packed_10: 1902813426
       tilemap_packed_101: 62704513
       tilemap_packed_102: 2083392852
-      tilemap_packed_103: 1076634773
       tilemap_packed_104: 891407601
       tilemap_packed_105: -399223641
-      tilemap_packed_106: -61277816
       tilemap_packed_107: -2101131037
       tilemap_packed_11: 1784732824
       tilemap_packed_113: -1175874499
       tilemap_packed_114: 980135748
       tilemap_packed_115: -540848505
       tilemap_packed_116: -423440166
-      tilemap_packed_117: 1414518593
-      tilemap_packed_118: 1905617758
-      tilemap_packed_119: 1857904738
       tilemap_packed_12: 1656235668
       tilemap_packed_125: 214810575
       tilemap_packed_126: 884042845
@@ -3073,7 +3074,6 @@ TextureImporter:
       tilemap_packed_128: -1459535407
       tilemap_packed_129: 1724394244
       tilemap_packed_13: 481617633
-      tilemap_packed_130: 1905661471
       tilemap_packed_131: -1732547596
       tilemap_packed_14: -949305062
       tilemap_packed_15: -1596388479

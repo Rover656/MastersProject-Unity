@@ -67,13 +67,16 @@ namespace Rover656.Survivors.Client {
             if (NetManager?.IsRunning ?? false) {
                 NetManager.PollEvents();
             } else {
-                if (Mathf.Approximately(GameTime % 10f, Mathf.Epsilon)) {
+                if (EveryNSeconds(4)) {
                     ConnectToRemoteServer();
                 }
             }
             
             // Run default update logic.
             base.Update();
+            
+            // Ensure network messages are sent after every update
+            NetManager?.TriggerUpdate();
         }
 
         private void ConnectToRemoteServer() {
@@ -112,6 +115,8 @@ namespace Rover656.Survivors.Client {
                 NetManager.Stop();
                 NetManager = null;
                 NetPeer = null;
+
+                ForceOnloadAll();
             }
         }
     }

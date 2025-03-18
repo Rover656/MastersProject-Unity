@@ -21,8 +21,14 @@ namespace Rover656.Survivors.Common.Entities
         
         public float InvincibilityDuration => 0.25f;
         public float InvincibleUntil { get; private set; }
+        
+        public int Experience { get; set; }
+
+        public int NextExperienceMilestone { get; set; } = 5;
 
         private readonly List<ItemStack> _inventory = new();
+
+        public IEnumerable<ItemStack> Inventory => _inventory;
         
         // Cached properties
         private int _healthIncrease = 0;
@@ -31,6 +37,11 @@ namespace Rover656.Survivors.Common.Entities
         public Player()
         {
             Health = MaxHealth;
+            _inventory.Add(new ItemStack()
+            {
+                Item = Registries.Items.ThrowingKnives,
+                Count = 2,
+            });
         }
 
         public int CalculateDamageTaken(int originalDamage) {
@@ -48,6 +59,18 @@ namespace Rover656.Survivors.Common.Entities
 
             if (!added) {
                 _inventory.Add(stack);
+            }
+        }
+
+        public void InternalAddExperience(int experience)
+        {
+            Experience += experience;
+            if (Experience >= NextExperienceMilestone)
+            {
+                Experience -= NextExperienceMilestone;
+                NextExperienceMilestone = (int)MathF.Floor(NextExperienceMilestone * 1.25f);
+                
+                // TODO: Fire level up event, which will open a menu on client side and pause gameplay.
             }
         }
 

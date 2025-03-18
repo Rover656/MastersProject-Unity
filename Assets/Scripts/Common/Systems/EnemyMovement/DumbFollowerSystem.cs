@@ -18,13 +18,7 @@ namespace Rover656.Survivors.Common.Systems.EnemyMovement
                 return;
             }
 
-            if (!abstractLevel.EntitiesByTag.TryGetValue(GeneralEntityTags.Player, out var players))
-            {
-                return;
-            }
-            
-            // TODO: If we were to support multiple players in future, you'd not want to do this.
-            var player = players.FirstOrDefault();
+            var player = abstractLevel.Player;
             if (player is null)
             {
                 return;

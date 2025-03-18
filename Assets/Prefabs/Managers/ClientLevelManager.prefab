@@ -50,3 +50,5 @@ MonoBehaviour:
     prefab: {fileID: 3202400305350403037, guid: a48dab1ea1d08424eb7c8e323132e37e, type: 3}
   - name: bat
     prefab: {fileID: 3202400305350403037, guid: ca8c7fb525e6146bbbf6390ba2b64fb4, type: 3}
+  - name: throwing_knife
+    prefab: {fileID: 3202400305350403037, guid: e88a8097b4e6e4c0d9144b8dfb8ad249, type: 3}
