@@ -103,25 +103,13 @@ namespace Rover656.Survivors.Framework {
             }
             
             // Send over the network, or queue if we're setting up a remote.
-            
-            if (_shouldQueueEvents) {
-                lock (_queuedEventsLock)
-                {
+            lock (_queuedEventsLock) {
+                if (_shouldQueueEvents) {
                     _queuedEvents.Enqueue(() => SendEventPacket(message));
+                } else {
+                    SendEventPacket(message);
                 }
             }
-            else
-            {
-                SendEventPacket(message);
-            }
-            
-            // lock (_queuedEventsLock) {
-            //     if (_shouldQueueEvents) {
-            //         _queuedEvents.Enqueue(() => SendEventPacket(message));
-            //     } else {
-            //         SendEventPacket(message);
-            //     }
-            // }
         }
         
         private void SendEventPacket<T>(T message) where T : AbstractEvent, new() {
@@ -316,6 +304,12 @@ namespace Rover656.Survivors.Framework {
             });
         }
 
+        public bool HasTag(AbstractEntity entity, object tag)
+        {
+            return EntitiesByTag.TryGetValue(tag, out var entities) &&
+                entities.Contains(entity);
+        }
+
         public virtual void Update() {
             // Performance timing
             _updateTimeCounter += Time.deltaTime;
@@ -441,7 +435,11 @@ namespace Rover656.Survivors.Framework {
                 return;
             }
             
-            entity.MovementVector = changedEvent.MovementVector;
+            OnEntityMovementVectorChanged(entity, changedEvent.MovementVector);
+        }
+
+        protected virtual void OnEntityMovementVectorChanged(AbstractEntity entity, Vector2 movementVector) {
+            entity.MovementVector = movementVector;
         }
 
         protected void OnEntityPositionChanged(EntityPositionChangedEvent changedEvent) {

@@ -1,30 +1,31 @@
 Player movement diagram:
 ```mermaid
 sequenceDiagram
-    box Purple Client-Side
+    box Client-Side
     actor Player
-    participant Client
-    participant LocalEventBus
+    participant Local Game
+    participant Local Event Bus
     end
 
-    box Green Server-Side
-    participant RemoteEventBus
-    participant Server
-    participant PhysicsSystem
+    box Server-Side
+    participant Remote Event Bus
+    participant Remote Game
+    participant Physics System
     end
 
-    Player->>Client: Player input
-    Client->>LocalEventBus: Fire movement vector update event
-    LocalEventBus-->>Client: Update player movement vector
+    Player->>Local Game: Player joystick input
+    Local Game->>Local Event Bus: Fire movement vector update event
+    Local Event Bus-->>Local Game: Update player movement vector locally
 
-    LocalEventBus->>RemoteEventBus: Broadcast event to remote event bus
+    Local Event Bus->>Remote Event Bus: Broadcast the event to remote event bus
+    Remote Event Bus->>Remote Game: Update player movement vector on remote
 
-    Server->>PhysicsSystem: Called as part of game update loop
-    PhysicsSystem->>RemoteEventBus: Update player position using its movement vector
-    RemoteEventBus-->>Server: Fire update player position event
+    Remote Game->>Physics System: Called as part of game update loop
+    Physics System->>Remote Event Bus: Fire update player position event (move player based on movement vec.)
+    Remote Event Bus-->>Remote Game: Update player position on remote
 
-    RemoteEventBus->>LocalEventBus: Broadcast event to the local event bus
+    Remote Event Bus->>Local Event Bus: Broadcast event to the local event bus
 
-    LocalEventBus->>Client: Update player position
-    Client->>Player: Update player position on-screen
+    Local Event Bus->>Local Game: Update player position locally
+    Local Game->>Player: Update player position on-screen
 ```

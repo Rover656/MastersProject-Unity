@@ -93,11 +93,26 @@ namespace Rover656.Survivors.Client {
             if (_entityPrefabMap.TryGetValue(entityTypeName, out var prefab))
             {
                 var entityObject = Instantiate(prefab, entity.Position, Quaternion.identity);
+                
+                if (_level.HasTag(entity, GeneralEntityTags.FaceMovementVector))
+                {
+                    entityObject.transform.up = entity.MovementVector;
+                }
+                
                 _gameObjects.Add(entity.Id, entityObject);
             }
             else
             {
                 Debug.LogError($"Error spawning entity: Missing prefab mapping for entity type '{entityTypeName}'.");
+            }
+        }
+
+        public void UpdateEntityDirection(AbstractEntity entity) {
+            if (_gameObjects.TryGetValue(entity.Id, out var representative)) {
+                if (_level.HasTag(entity, GeneralEntityTags.FaceMovementVector))
+                {
+                    representative.transform.up = entity.MovementVector;
+                }
             }
         }
 

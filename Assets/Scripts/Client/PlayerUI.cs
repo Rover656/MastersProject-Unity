@@ -1,4 +1,4 @@
-using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -6,24 +6,37 @@ namespace Rover656.Survivors.Client
 {
     public class PlayerUI : MonoBehaviour {
         
-        public RectTransform PlayerHealthBar;
-        private float _playerHealthBarMaxWidth;
+        public SlicedFilledImage PlayerHealthBar;
 
         public TextMeshProUGUI TimeText;
 
+        public SlicedFilledImage ExperienceBar;
+        
         private ClientLevelManager _clientLevelManager;
         private ClientLevel Level => _clientLevelManager.Level;
+
+        public GameObject inventoryItemPrefab;
+        public List<KeyValuePair<string, Sprite>> itemSprites = new();
+        private Dictionary<string, Sprite> _itemSpriteMap = new();
         
         private void Start()
         {
-            _playerHealthBarMaxWidth = PlayerHealthBar.rect.width;
+            // Copy KVP from Unity into index
+            foreach (var pair in itemSprites)
+            {
+                _itemSpriteMap.Add(pair.Key, pair.Value);
+            }
+            
             _clientLevelManager = FindAnyObjectByType<ClientLevelManager>();
         }
 
         private void Update()
         {
             // Update healthbar width
-            PlayerHealthBar.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, _playerHealthBarMaxWidth * (Level.Player.Health / (float)Level.Player.MaxHealth));
+            PlayerHealthBar.fillAmount = Level.Player.Health / (float)Level.Player.MaxHealth;
+
+            // TODO
+            ExperienceBar.fillAmount = 0.5f;
             
             // Update clock
             int minutes = (int)(Level.GameTime / 60);

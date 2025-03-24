@@ -31,12 +31,20 @@ namespace Rover656.Survivors.Common.Systems {
                         }
                         
                         Debug.Log($"Spawning {count} particles at {abstractLevel.GameTime}");
+
+                        int damageMultiplier = 1;
+                        if (itemStack.Item.TryGetComponent(ItemComponents.DamageMultiplier,
+                                out var damageMultiplierGetter))
+                        {
+                            damageMultiplier = damageMultiplierGetter(itemStack.Count);
+                        }
                         
                         // TODO: Spread the particles somehow?
                         for (int i = 0; i < count; i++)
                         {
                             var particle = particleType.Create();
                             particle.VolleyNumber = i;
+                            particle.Damage *= damageMultiplier;
                             abstractLevel.AddNewEntity(particle, player.Position);
                         }
                     }

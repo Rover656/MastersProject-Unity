@@ -10,7 +10,7 @@ namespace Rover656.Survivors.Common.Entities {
         public override bool CanCollide => false;
         public override int PhysicsLayer => CollisionLayers.Player;
         public int DamagesPhysicsLayer => CollisionLayers.Enemies;
-        public int Damage { get; private set; }
+        public int Damage { get; set; }
         
         public ParticleMovementType MovementType { get; }
         public override float MovementSpeed { get; }

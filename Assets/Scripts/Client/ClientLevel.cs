@@ -41,6 +41,12 @@ namespace Rover656.Survivors.Client {
             _clientLevelManager?.SpawnEntity(entitySpawnEvent.Entity);
         }
 
+        protected override void OnEntityMovementVectorChanged(AbstractEntity entity, Vector2 movementVector)
+        {
+            base.OnEntityMovementVectorChanged(entity, movementVector);
+            _clientLevelManager?.UpdateEntityDirection(entity);
+        }
+
         protected override void OnEntityPositionChanged(AbstractEntity entity, Vector2 position) {
             base.OnEntityPositionChanged(entity, position);
             _clientLevelManager?.UpdateEntityPosition(entity);

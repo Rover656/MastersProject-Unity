@@ -15,8 +15,12 @@ namespace Rover656.Survivors.Common.Registries
             EnemyMovementTag.DumbFollower, GeneralEntityTags.Damager, GeneralEntityTags.Damageable);
 
         public static EntityType<WeaponParticle> ThrowingKnife { get; } = new(() =>
-                new WeaponParticle(ThrowingKnife, ParticleMovementType.AimRandomTarget, 12f, 2, 1),
-            GeneralEntityTags.Damager, GeneralEntityTags.Particle);
+                new WeaponParticle(ThrowingKnife, ParticleMovementType.AimRandomTarget, 16f, 2, 2),
+            GeneralEntityTags.Damager, GeneralEntityTags.Particle, GeneralEntityTags.FaceMovementVector);
+
+        public static EntityType<WeaponParticle> ThrowingAxe { get; } = new(() =>
+                new WeaponParticle(ThrowingAxe, ParticleMovementType.RandomDirection, 12f, 4, 1),
+            GeneralEntityTags.Damager, GeneralEntityTags.Particle, GeneralEntityTags.FaceMovementVector);
 
         public static void Register(Registry<IEntityType> registry)
         {
@@ -25,6 +29,7 @@ namespace Rover656.Survivors.Common.Registries
             registry.Register("bat", Bat);
 
             registry.Register("throwing_knife", ThrowingKnife);
+            registry.Register("throwing_axe", ThrowingAxe);
         }
     }
 }
