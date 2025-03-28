@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Generic;
 using Rover656.Survivors.Common;
-using Rover656.Survivors.Common.Entities;
-using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework;
 using Rover656.Survivors.Framework.Entity;
 using Terresquall;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Rover656.Survivors.Client {
     public class ClientLevelManager : MonoBehaviour {
@@ -50,7 +47,7 @@ namespace Rover656.Survivors.Client {
         private void Update() {
             // TODO: Temporary input logic for player
             
-            Vector2 joyInput = VirtualJoystick.GetAxis();
+            Vector2 joyInput = VirtualJoystick.GetAxis(11);
             if (joyInput.magnitude > 0)
             {
                 _level.Player.SetMovementVector(joyInput.normalized);

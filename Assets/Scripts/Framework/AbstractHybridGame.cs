@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using LiteNetLib;
 using LiteNetLib.Utils;
@@ -13,7 +12,6 @@ using Debug = UnityEngine.Debug;
 using Environment = Rover656.Survivors.Framework.Systems.Environment;
 
 namespace Rover656.Survivors.Framework {
-    // TODO: Methods to serialize the entire game state for a large initialization packet.
     /// <summary>
     /// Fundamentals for a hybrid-compute game.
     /// </summary>
@@ -54,6 +52,8 @@ namespace Rover656.Survivors.Framework {
         // Performance metrics
         private int _updatesPerSecond;
         private int _updatesThisSecond;
+        private int _eventsPerSecond;
+        private int _eventsThisSecond;
         private float _updateTimeCounter;
 
         protected AbstractHybridGame(IRegistryProvider registries, NetManager netManager) {
@@ -96,8 +96,13 @@ namespace Rover656.Survivors.Framework {
         }
         
         #region Event Bus
+        
+        // TODO: Add event counters
 
-        public void Post<T>(T message) where T : AbstractEvent, new() {
+        public void Post<T>(T message) where T : AbstractEvent, new()
+        {
+            _eventsThisSecond++;
+            
             if (_eventListeners.TryGetValue(HashCache<T>.Id, out var handler)) {
                 handler(message);
             }
@@ -321,10 +326,13 @@ namespace Rover656.Survivors.Framework {
                 
                 // Computes average.
                 _updatesPerSecond = Mathf.FloorToInt((_updatesPerSecond + _updatesThisSecond) / (1 + _updateTimeCounter));
+                _eventsPerSecond = _eventsThisSecond;//Mathf.FloorToInt((_eventsPerSecond + _eventsThisSecond) / (1 + _updateTimeCounter));
                 _updateTimeCounter = 0;
                 _updatesThisSecond = 0;
-                
-                // Debug.Log($"Updates per second updated to: {_updatesPerSecond}");
+                _eventsThisSecond = 0;
+
+                Debug.Log($"Updates per second: {_updatesPerSecond}");
+                Debug.Log($"Events per second: {_eventsPerSecond}");
             }
             
             if (Environment == Environment.Local) {

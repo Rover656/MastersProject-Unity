@@ -53,6 +53,8 @@ MonoBehaviour:
     prefab: {fileID: 3202400305350403037, guid: ca8c7fb525e6146bbbf6390ba2b64fb4, type: 3}
   - name: throwing_knife
     prefab: {fileID: 3202400305350403037, guid: e88a8097b4e6e4c0d9144b8dfb8ad249, type: 3}
+  - name: rune_wizard
+    prefab: {fileID: 3202400305350403037, guid: ee5353ef7ae634b4889610c3733199d8, type: 3}
 --- !u!1 &8140376741900323961
 GameObject:
   m_ObjectHideFlags: 0

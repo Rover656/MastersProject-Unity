@@ -25,6 +25,7 @@ namespace Rover656.Survivors.Common.World {
         public DamageSystem DamageSystem { get; }
         public WeaponSystem WeaponSystem { get; }
         public ParticleSystem ParticleSystem { get; }
+        public DirectorSystem DirectorSystem { get; }
 
         protected AbstractLevel(NetManager netManager) : base(SurvivorsRegistries.Instance, netManager) {
             // Register all systems.
@@ -33,6 +34,7 @@ namespace Rover656.Survivors.Common.World {
             DamageSystem = AddSystem(new DamageSystem());
             WeaponSystem = AddSystem(new WeaponSystem());
             ParticleSystem = AddSystem(new ParticleSystem());
+            DirectorSystem = AddSystem(new DirectorSystem());
 
             // Subscribe to game events
             Subscribe<EntityHealthChangedEvent>(OnEntityHealthChanged, EntityHealthChangedEvent.Register);

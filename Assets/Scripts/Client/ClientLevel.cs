@@ -1,4 +1,3 @@
-using System;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using Rover656.Survivors.Common.Events;
@@ -23,13 +22,6 @@ namespace Rover656.Survivors.Client {
             
             // Spawn the player
             Player = AddNewEntity(EntityTypes.Player.Create());
-
-            // Add an example enemy (will be the job of the director system soon)
-            AddNewEntity(EntityTypes.Bat.Create(), new Vector2(1, 2));
-            AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 1));
-            // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(1, 1));
-            // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(0, 2));
-            // AddNewEntity(EntityTypes.Bat.Create(), new Vector2(2, 0));
         }
         
         #region Unity Scene Updates

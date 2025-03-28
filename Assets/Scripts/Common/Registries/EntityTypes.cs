@@ -14,6 +14,9 @@ namespace Rover656.Survivors.Common.Registries
         public static EntityType<Enemy> Bat { get; } = new(() => new Enemy(Bat, 6f, 5, 2), GeneralEntityTags.Enemy,
             EnemyMovementTag.DumbFollower, GeneralEntityTags.Damager, GeneralEntityTags.Damageable);
 
+        public static EntityType<Enemy> RuneWizard { get; } = new(() => new Enemy(RuneWizard, 4f, 15, 3), GeneralEntityTags.Enemy,
+            EnemyMovementTag.DumbFollower, GeneralEntityTags.Damager, GeneralEntityTags.Damageable);
+
         public static EntityType<WeaponParticle> ThrowingKnife { get; } = new(() =>
                 new WeaponParticle(ThrowingKnife, ParticleMovementType.AimRandomTarget, 16f, 2, 2),
             GeneralEntityTags.Damager, GeneralEntityTags.Particle, GeneralEntityTags.FaceMovementVector);
@@ -26,7 +29,9 @@ namespace Rover656.Survivors.Common.Registries
         {
             registry.Register("basic_experience_shard", BasicExperienceShard);
             registry.Register("player", Player);
+            
             registry.Register("bat", Bat);
+            registry.Register("rune_wizard", RuneWizard);
 
             registry.Register("throwing_knife", ThrowingKnife);
             registry.Register("throwing_axe", ThrowingAxe);
