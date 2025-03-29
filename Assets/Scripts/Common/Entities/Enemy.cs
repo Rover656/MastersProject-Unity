@@ -1,21 +1,31 @@
+using System.Collections.Generic;
 using LiteNetLib.Utils;
+using Rover656.Survivors.Common.Items;
 using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework.Entity;
 
 namespace Rover656.Survivors.Common.Entities {
-    public class Enemy : AbstractEntity, IDamageable, IDamageSource {
-        public Enemy(IEntityType type, float movementSpeed, int maxHealth, int damage) {
+    public class Enemy : AbstractEntity, IDamageable, IDamageSource, IEntityInventory {
+        public Enemy(IEntityType type, float movementSpeed, int maxHealth, int damage, bool isFlying,
+            List<ItemStack> inventory) {
             Type = type;
             MovementSpeed = movementSpeed;
             MaxHealth = maxHealth;
             Health = MaxHealth;
             Damage = damage;
+            IsFlying = isFlying;
+            
+            Inventory = inventory;
         }
+        
+        public IEnumerable<ItemStack> Inventory { get; }
 
         public override IEntityType Type { get; }
         public override float MovementSpeed { get; }
 
         public override bool CanCollide => true;
+        
+        public bool IsFlying { get; }
         public override int PhysicsLayer => CollisionLayers.Enemies;
 
         public int Health { get; private set; }

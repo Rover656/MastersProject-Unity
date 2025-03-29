@@ -13,6 +13,11 @@ namespace Rover656.Survivors.Common.Systems.EnemyMovement
 
         public void Update(AbstractLevel abstractLevel, float deltaTime)
         {
+            // Only run 20 times per second, we don't need hyper fast follower systems
+            if (!abstractLevel.EveryNSeconds(1 / 20f)) {
+                return;
+            }
+            
             if (!abstractLevel.EntitiesByTag.TryGetValue(EnemyMovementTag.DumbFollower, out var enemies))
             {
                 return;

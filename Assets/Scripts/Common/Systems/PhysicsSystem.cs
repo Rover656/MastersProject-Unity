@@ -15,24 +15,14 @@ namespace Rover656.Survivors.Common.Systems
     public class PhysicsSystem : IGameSystem<AbstractLevel>
     {
         public GameSystemType Type => SystemTypes.Physics;
+        
+        public void Update(AbstractLevel abstractLevel, float deltaTime) {
+            /*if (!abstractLevel.EveryNSeconds(1 / 30f)) {
+                return;
+            }
 
-        // public void Update(AbstractLevel abstractLevel, float deltaTime)
-        // {
-        //     // TODO: Add latency to delta time...
-        //     
-        //     // Apply movements
-        //     foreach (var entity in abstractLevel.Entities)
-        //     {
-        //         // TODO: Collision checks.
-        //         if (entity.Velocity.magnitude > 0)
-        //         {
-        //             entity.SetPosition(entity.Position + (entity.Velocity * deltaTime));
-        //         }
-        //     }
-        // }
-
-        public void Update(AbstractLevel abstractLevel, float deltaTime)
-        {
+            deltaTime = 1 / 30f;*/
+            
             // Fake load to try and cause a performance impact.
             // counter exists to ensure this loop has a side effect
             // ulong counter = 0;

@@ -19,7 +19,7 @@ namespace Rover656.Survivors.Framework.Entity {
                 OnGameAttached();
             }
         }
-
+        
         public Guid Id { get; private set; } = Guid.NewGuid();
         public Vector2 Position { get; internal set; }
         public Vector2 Size => Vector2.one; // TODO: Configurable
@@ -33,6 +33,8 @@ namespace Rover656.Survivors.Framework.Entity {
         public abstract float MovementSpeed { get; }
 
         public Vector2 Velocity => MovementVector * MovementSpeed;
+
+        private double? _seededRandomValue = null;
 
         public void SetPosition(Vector2 position) {
             // Skip unnecessary updates & thus network traffic.
@@ -81,6 +83,15 @@ namespace Rover656.Survivors.Framework.Entity {
             Position = new Vector2(reader.GetFloat(), reader.GetFloat());
             MovementVector = new Vector2(reader.GetFloat(), reader.GetFloat());
             DeserializeAdditional(reader);
+        }
+
+        public float GetOffset(float minInclusive, float maxInclusive) {
+            // Only seed it once for performance.
+            if (_seededRandomValue == null) {
+                _seededRandomValue = new System.Random(Id.GetHashCode()).NextDouble();
+            }
+            
+            return (float)(_seededRandomValue * (maxInclusive - minInclusive) + minInclusive);
         }
     }
 }

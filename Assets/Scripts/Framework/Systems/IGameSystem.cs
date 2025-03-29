@@ -1,7 +1,4 @@
-using Rover656.Survivors.Common.World;
-using Rover656.Survivors.Framework.Systems;
-
-namespace Rover656.Survivors.Framework
+namespace Rover656.Survivors.Framework.Systems
 {
     public interface IGameSystem<in TGame> where TGame : AbstractHybridGame<TGame>
     {

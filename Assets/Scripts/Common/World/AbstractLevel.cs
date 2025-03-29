@@ -1,3 +1,4 @@
+using System;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using Rover656.Survivors.Common.Entities;
@@ -22,6 +23,7 @@ namespace Rover656.Survivors.Common.World {
 
         public PhysicsSystem PhysicsSystem { get; }
         public DumbFollowerSystem DumbFollowerSystem { get; }
+        public DistancedFollowerSystem DistancedFollowerSystem { get; }
         public DamageSystem DamageSystem { get; }
         public WeaponSystem WeaponSystem { get; }
         public ParticleSystem ParticleSystem { get; }
@@ -31,6 +33,7 @@ namespace Rover656.Survivors.Common.World {
             // Register all systems.
             PhysicsSystem = AddSystem(new PhysicsSystem());
             DumbFollowerSystem = AddSystem(new DumbFollowerSystem());
+            DistancedFollowerSystem = AddSystem(new DistancedFollowerSystem());
             DamageSystem = AddSystem(new DamageSystem());
             WeaponSystem = AddSystem(new WeaponSystem());
             ParticleSystem = AddSystem(new ParticleSystem());
@@ -54,11 +57,24 @@ namespace Rover656.Survivors.Common.World {
             base.Update();
         }
 
-        public bool EveryNSeconds(float seconds)
+        public bool EveryNSeconds(float seconds, float offset = 0)
         {
-            return Mathf.FloorToInt(GameTime) !=
+            /*return Mathf.FloorToInt(GameTime) !=
                    Mathf.FloorToInt(GameTime - DeltaTime) &&
-                   Mathf.FloorToInt(GameTime) % seconds == 0;
+                   Mathf.Approximately(Mathf.FloorToInt(GameTime) % seconds, Mathf.Epsilon);*/
+
+            if (seconds <= 0) {
+                throw new ArgumentException("Seconds must be greater than 0");
+            }
+
+            if (seconds < DeltaTime) {
+                return true;
+            }
+
+            float prevTime = (GameTime + offset) - DeltaTime;
+
+            // Check if we crossed a multiple of `seconds`
+            return Mathf.FloorToInt((GameTime + offset) / seconds) != Mathf.FloorToInt(prevTime / seconds);
         }
         
         protected override void SerializeTickMeta(NetDataWriter writer)

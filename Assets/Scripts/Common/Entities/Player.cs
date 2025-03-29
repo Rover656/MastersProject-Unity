@@ -8,7 +8,7 @@ using Rover656.Survivors.Framework.Entity;
 
 namespace Rover656.Survivors.Common.Entities
 {
-    public class Player : AbstractEntity, IDamageable {
+    public class Player : AbstractEntity, IDamageable, IEntityInventory {
         public override IEntityType Type => EntityTypes.Player;
 
         public override bool CanCollide => false;
@@ -40,7 +40,7 @@ namespace Rover656.Survivors.Common.Entities
             _inventory.Add(new ItemStack()
             {
                 Item = Registries.Items.ThrowingKnives,
-                Count = 2,
+                Count = 200,
             });
         }
 

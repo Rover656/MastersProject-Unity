@@ -9,7 +9,7 @@ namespace Rover656.Survivors.Common.Items {
 
         public static ItemComponentType<EntityType<WeaponParticle>> WeaponParticle { get; } = new();
         public static ItemComponentType<StackScaled<float>> WeaponDelay { get; } = new();
-        public static ItemComponentType<StackScaled<int>> DamageMultiplier { get; } = new();
+        public static ItemComponentType<StackScaled<float>> DamageMultiplier { get; } = new();
         public static ItemComponentType<StackScaled<int>> ParticleCount { get; } = new();
     }
 }

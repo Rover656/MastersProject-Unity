@@ -138,7 +138,10 @@ namespace Rover656.Survivors.Framework {
             
             // Stored as key-value pair so we can remove listeners (later)
             _eventListeners[id] = obj => handler((T)obj);
-            packetRegistrar(NetPacketProcessor, handler);
+            packetRegistrar(NetPacketProcessor, packet => {
+                _eventsThisSecond++;
+                handler(packet);
+            });
         }
 
         /// <summary>
@@ -326,7 +329,7 @@ namespace Rover656.Survivors.Framework {
                 
                 // Computes average.
                 _updatesPerSecond = Mathf.FloorToInt((_updatesPerSecond + _updatesThisSecond) / (1 + _updateTimeCounter));
-                _eventsPerSecond = _eventsThisSecond;//Mathf.FloorToInt((_eventsPerSecond + _eventsThisSecond) / (1 + _updateTimeCounter));
+                _eventsPerSecond = Mathf.FloorToInt((_eventsPerSecond + _eventsThisSecond) / (1 + _updateTimeCounter));
                 _updateTimeCounter = 0;
                 _updatesThisSecond = 0;
                 _eventsThisSecond = 0;

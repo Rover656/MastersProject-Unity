@@ -41,14 +41,18 @@ namespace Rover656.Survivors.Common.Systems {
                     if (weaponParticle.MovementType == ParticleMovementType.AimRandomTarget &&
                         weaponParticle.MovementVector.magnitude <= Mathf.Epsilon)
                     {
-                        if (enemies.Count > 0)
-                        {
-                            var enemy = enemies[Random.Range(0, enemies.Count)];
-                            weaponParticle.SetMovementVector((enemy.Position - weaponParticle.Position).normalized);
-                        }
-                        else
-                        {
-                            weaponParticle.SetMovementVector(Random.insideUnitCircle.normalized);
+                        if (weaponParticle.IsPlayerParticle) {
+                            if (enemies.Count > 0)
+                            {
+                                var enemy = enemies[Random.Range(0, enemies.Count)];
+                                weaponParticle.SetMovementVector((enemy.Position - weaponParticle.Position).normalized);
+                            }
+                            else
+                            {
+                                weaponParticle.SetMovementVector(Random.insideUnitCircle.normalized);
+                            }
+                        } else {
+                            weaponParticle.SetMovementVector((abstractLevel.Player.Position - weaponParticle.Position).normalized);
                         }
                     }
 

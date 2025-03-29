@@ -51,11 +51,11 @@ namespace Rover656.Survivors.Client {
 
         protected override void OnEntityHealthChanged(EntityHealthChangedEvent healthChangedEvent)
         {
-            base.OnEntityHealthChanged(healthChangedEvent);
-
             if (healthChangedEvent.Delta > 0) {
                 _clientLevelManager?.SpawnDamageParticle(healthChangedEvent.EntityId, healthChangedEvent.Delta);
             }
+            
+            base.OnEntityHealthChanged(healthChangedEvent);
         }
 
         #endregion

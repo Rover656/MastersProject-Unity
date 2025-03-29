@@ -9,5 +9,6 @@ namespace Rover656.Survivors.Common
         DamagerDestroyOnContact,
         Particle,
         FaceMovementVector,
+        Inventory,
     }
 }
