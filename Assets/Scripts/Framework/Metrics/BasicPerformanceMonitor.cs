@@ -16,7 +16,7 @@ namespace Rover656.Survivors.Framework.Metrics {
         }
 
         public void Report(int entityCount, int updatesPerSecond, int eventsPerSecond, int systemCount,
-            float systemRunTime, NetStatistics netStatistics) {
+            float systemRunTime, int ping, NetStatistics netStatistics) {
             // TODO: Create and record metrics.
 
             _metrics.Add(new Metrics() {
@@ -26,6 +26,7 @@ namespace Rover656.Survivors.Framework.Metrics {
                 EventsPerSecond = eventsPerSecond,
                 SystemCount = systemCount,
                 AverageSystemRunTime = systemRunTime,
+                RemotePeerPing = ping,
                 BytesReceived = netStatistics?.BytesReceived ?? 0,
                 BytesSent = netStatistics?.BytesSent ?? 0,
                 PacketsSent = netStatistics?.PacketsSent ?? 0,
@@ -35,7 +36,7 @@ namespace Rover656.Survivors.Framework.Metrics {
         }
 
         public void SaveToFile() {
-            var csv = ToCSV();
+            var csv = ToCsv();
 
             // The target file path e.g.
 #if UNITY_EDITOR
@@ -59,9 +60,9 @@ namespace Rover656.Survivors.Framework.Metrics {
 #endif
         }
 
-        private string ToCSV() {
+        private string ToCsv() {
             var sb = new StringBuilder(
-                "Time,EntityCount,UpdatesPerSecond,EventsPerSecond,SystemCount,AverageSystemRunTime,BytesReceived,BytesSent,PacketsSent,PacketsReceived,PacketLossPercent");
+                "Time,EntityCount,UpdatesPerSecond,EventsPerSecond,SystemCount,AverageSystemRunTime,RemotePeerPing,BytesReceived,BytesSent,PacketsSent,PacketsReceived,PacketLossPercent");
             foreach (var metric in _metrics) {
                 sb.Append("\n")
                     .Append(metric.Time)
@@ -75,6 +76,8 @@ namespace Rover656.Survivors.Framework.Metrics {
                     .Append(metric.SystemCount)
                     .Append(",")
                     .Append(metric.AverageSystemRunTime)
+                    .Append(",")
+                    .Append(metric.RemotePeerPing)
                     .Append(",")
                     .Append(metric.BytesReceived)
                     .Append(",")
@@ -97,6 +100,7 @@ namespace Rover656.Survivors.Framework.Metrics {
             public int EventsPerSecond { get; set; }
             public int SystemCount { get; set; }
             public float AverageSystemRunTime { get; set; }
+            public int RemotePeerPing { get; set; }
             public long BytesReceived { get; set; }
             public long BytesSent { get; set; }
             public long PacketsSent { get; set; }

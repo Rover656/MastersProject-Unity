@@ -265,6 +265,19 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
@@ -2403,16 +2416,16 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ui_tiles_97
+      name: TitleBanner
       rect:
         serializedVersion: 2
         x: 224
         y: 32
-        width: 16
+        width: 48
         height: 16
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 16, y: 4, z: 16, w: 6}
       customData: 
       outline: []
       physicsShape: []
@@ -2420,50 +2433,6 @@ TextureImporter:
       bones: []
       spriteID: 65ed296e41cbf4c538ce582fdc107178
       internalID: -1732657152
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: ui_tiles_98
-      rect:
-        serializedVersion: 2
-        x: 240
-        y: 32
-        width: 16
-        height: 16
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 3a37b4c022e8d4b1390cf0fad1c7dac8
-      internalID: -122209257
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: ui_tiles_99
-      rect:
-        serializedVersion: 2
-        x: 256
-        y: 32
-        width: 16
-        height: 16
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: e89b3b6af0e544f39b34462040e8a5eb
-      internalID: 394482472
       vertices: []
       indices: 
       edges: []
@@ -3626,6 +3595,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
+      TitleBanner: -1732657152
       blue_bar: -205413744
       empty_bar: -2127249509
       green_bar: -2000635414
@@ -3775,7 +3745,6 @@ TextureImporter:
       ui_tiles_94: 1712683523
       ui_tiles_95: -744503137
       ui_tiles_96: -606352552
-      ui_tiles_97: -1732657152
       ui_tiles_98: -122209257
       ui_tiles_99: 394482472
   mipmapLimitGroupName: 

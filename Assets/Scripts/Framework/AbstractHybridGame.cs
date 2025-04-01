@@ -9,7 +9,6 @@ using Rover656.Survivors.Framework.Events;
 using Rover656.Survivors.Framework.Metrics;
 using Rover656.Survivors.Framework.Systems;
 using UnityEngine;
-using UnityEngine.UIElements;
 using Debug = UnityEngine.Debug;
 using Environment = Rover656.Survivors.Framework.Systems.Environment;
 
@@ -120,8 +119,6 @@ namespace Rover656.Survivors.Framework {
         
         #region Event Bus
         
-        // TODO: Add event counters
-
         public void Post<T>(T message) where T : AbstractEvent, new()
         {
             _eventsThisSecond++;
@@ -408,7 +405,7 @@ namespace Rover656.Survivors.Framework {
                 Debug.Log($"Events per second: {_eventsPerSecond}");
                 
                 BasicPerformanceMonitor.Report(_entities.Count, _updatesPerSecond, _eventsPerSecond, _activeSystemTypes.Count, _systemRuntimePerSecond,
-                    NetManager?.Statistics);
+                    NetPeer?.Ping ?? 0, NetManager?.Statistics);
             }
             
             if (Environment == Environment.Local) {

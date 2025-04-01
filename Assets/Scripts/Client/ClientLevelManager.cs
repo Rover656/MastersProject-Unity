@@ -9,10 +9,8 @@ using UnityEngine;
 
 namespace Rover656.Survivors.Client {
     public class ClientLevelManager : MonoBehaviour {
-        private ClientLevel _level;
-        
-        public ClientLevel Level => _level;
-        
+        public ClientLevel Level { get; private set; }
+
         [Serializable]
         public struct NamedPrefab {
             public string name;
@@ -22,7 +20,7 @@ namespace Rover656.Survivors.Client {
         public GameObject damageParticlePrefab;
 
         public List<NamedPrefab> entityPrefabs = new();
-        private Dictionary<string, GameObject> _entityPrefabMap = new();
+        private readonly Dictionary<string, GameObject> _entityPrefabMap = new();
 
         // Map between entity ID and GameObject.
         private readonly Dictionary<Guid, GameObject> _gameObjects = new();
@@ -35,10 +33,10 @@ namespace Rover656.Survivors.Client {
                 _entityPrefabMap.Add(pair.name, pair.prefab);
             }
             
-            _level = new ClientLevel(null, this);
+            Level = new ClientLevel(null, this);
             
             // Add entities that were added during initialization.
-            foreach (var entity in _level.Entities)
+            foreach (var entity in Level.Entities)
             {
                 SpawnEntity(entity);
             }
@@ -50,7 +48,7 @@ namespace Rover656.Survivors.Client {
             Vector2 joyInput = VirtualJoystick.GetAxis(11);
             if (joyInput.magnitude > 0)
             {
-                _level.Player.SetMovementVector(joyInput.normalized);
+                Level.Player.SetMovementVector(joyInput.normalized);
             }
             else
             {
@@ -72,26 +70,26 @@ namespace Rover656.Survivors.Client {
                 }
                 
                 playerMovementVector.Normalize();
-                _level.Player.SetMovementVector(playerMovementVector);
+                Level.Player.SetMovementVector(playerMovementVector);
             }
             
             // Trigger level updates.
-            _level.Update();
+            Level.Update();
         }
         
         public void SpawnEntity(AbstractEntity entity)
         {
             // Will be captured after initialization
-            if (_level == null) {
+            if (Level == null) {
                 return;
             }
             
-            var entityTypeName = _level.Registries.GetNameFrom(FrameworkRegistries.EntityTypes, entity.Type);
+            var entityTypeName = Level.Registries.GetNameFrom(FrameworkRegistries.EntityTypes, entity.Type);
             if (_entityPrefabMap.TryGetValue(entityTypeName, out var prefab))
             {
                 var entityObject = Instantiate(prefab, entity.Position, Quaternion.identity);
                 
-                if (_level.HasTag(entity, GeneralEntityTags.FaceMovementVector))
+                if (Level.HasTag(entity, GeneralEntityTags.FaceMovementVector))
                 {
                     entityObject.transform.up = entity.MovementVector;
                 }
@@ -106,7 +104,7 @@ namespace Rover656.Survivors.Client {
 
         public void UpdateEntityDirection(AbstractEntity entity) {
             if (_gameObjects.TryGetValue(entity.Id, out var representative)) {
-                if (_level.HasTag(entity, GeneralEntityTags.FaceMovementVector))
+                if (Level.HasTag(entity, GeneralEntityTags.FaceMovementVector))
                 {
                     representative.transform.up = entity.MovementVector;
                 }

@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Sockets;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using Rover656.Survivors.Common.Events;
@@ -85,6 +87,7 @@ namespace Rover656.Survivors.Client {
             listener.PeerConnectedEvent += OnPeerConnected;
             listener.NetworkReceiveEvent += OnNetworkReceived;
             listener.PeerDisconnectedEvent += OnPeerDisconnected;
+            listener.NetworkErrorEvent += ListenerOnNetworkErrorEvent;
 
             NetManager = new NetManager(listener);
             NetManager.ChannelsCount = 4;
@@ -94,6 +97,10 @@ namespace Rover656.Survivors.Client {
             SerializeWorld(levelData);
             
             NetPeer = NetManager.Connect("127.0.0.1", 1337, levelData);
+        }
+
+        private void ListenerOnNetworkErrorEvent(IPEndPoint endpoint, SocketError socketerror) {
+            Debug.LogError($"Error from {endpoint}: {socketerror}");
         }
 
         private void OnPeerConnected(NetPeer peer) {
