@@ -6,8 +6,10 @@ using LiteNetLib.Utils;
 using Rover656.Survivors.Framework.Entity;
 using Rover656.Survivors.Framework.EventBus;
 using Rover656.Survivors.Framework.Events;
+using Rover656.Survivors.Framework.Metrics;
 using Rover656.Survivors.Framework.Systems;
 using UnityEngine;
+using UnityEngine.UIElements;
 using Debug = UnityEngine.Debug;
 using Environment = Rover656.Survivors.Framework.Systems.Environment;
 
@@ -15,15 +17,26 @@ namespace Rover656.Survivors.Framework {
     /// <summary>
     /// Fundamentals for a hybrid-compute game.
     /// </summary>
-    public abstract class AbstractHybridGame<TGame> : IHybridGameAccess where TGame : AbstractHybridGame<TGame> {
+    public abstract class AbstractHybridGame<TGame> : IHybridGameAccess, IPacketSender where TGame : AbstractHybridGame<TGame> {
         public abstract SystemEnvironment SystemEnvironment { get; }
         
         // TODO: When connecting ensure the registries match.
         public IRegistryProvider Registries { get; }
 
         public abstract Environment Environment { get; }
-        
-        protected NetManager NetManager { get; set; }
+
+        private NetManager _netManager;
+
+        protected NetManager NetManager {
+            get => _netManager;
+            set {
+                _netManager = value;
+
+                if (_netManager != null) {
+                    _netManager.EnableStatistics = true;
+                }
+            }
+        }
         protected NetPeer NetPeer { get; set; }
         
         public abstract float DeltaTime { get; }
@@ -54,7 +67,11 @@ namespace Rover656.Survivors.Framework {
         private int _updatesThisSecond;
         private int _eventsPerSecond;
         private int _eventsThisSecond;
+        private float _systemRunTimeThisSecond;
+        private float _systemRuntimePerSecond;
         private float _updateTimeCounter;
+        
+        protected readonly BasicPerformanceMonitor BasicPerformanceMonitor;
 
         protected AbstractHybridGame(IRegistryProvider registries, NetManager netManager) {
             Registries = registries;
@@ -76,6 +93,9 @@ namespace Rover656.Survivors.Framework {
                     return new Vector2(x, y);
                 });
             
+            // Bulk event handler
+            NetPacketProcessor.SubscribeReusable<BulkEventBundle>(HandleBulkEvents);
+            
             // Register event subscriptions
             Subscribe<GameTickEvent>(Handle);
             Subscribe<GameSystemActivationEvent>(Handle, GameSystemActivationEvent.Register);
@@ -83,16 +103,19 @@ namespace Rover656.Survivors.Framework {
             Subscribe<EntityPositionChangedEvent>(OnEntityPositionChanged);
             Subscribe<EntitySpawnEvent>(OnEntitySpawn, EntitySpawnEvent.Register);
             Subscribe<EntityDestroyedEvent>(OnEntityDestroyed);
+            
+            // Create performance monitor
+            BasicPerformanceMonitor = new BasicPerformanceMonitor(Environment.ToString());
         }
 
-        public void Send<T>(T packet, DeliveryMethod deliveryMethod) where T : class, new() {
+        public void Send<T>(T packet, DeliveryMethod deliveryMethod, byte channel = 0) where T : class, new() {
             if (NetManager == null || NetPeer == null) {
                 return;
             }
 
             var writer = new NetDataWriter();
             NetPacketProcessor.Write(writer, packet);
-            NetPeer.Send(writer, deliveryMethod);
+            NetPeer.Send(writer, channel, deliveryMethod);
         }
         
         #region Event Bus
@@ -116,12 +139,57 @@ namespace Rover656.Survivors.Framework {
                 }
             }
         }
-        
+
+        public int MaxBulkPackets => 16;
+
+        // NOTE: Packets that allow drops will drop together - this is a nasty caveat in some cases.
+        public void PostMany<T>(IList<T> messages) where T : AbstractEvent, new() {
+            // Arbitrary limit to keep packet size down.
+            // A more mature implementation would pool to the maximum number per packet.
+            if (messages.Count < 1 || messages.Count > MaxBulkPackets) {
+                throw new ArgumentException($"Message count must be between 1 and {MaxBulkPackets}!");
+            }
+            
+            bool shouldBuildBundle = NetManager?.IsRunning ?? false || _shouldQueueEvents;
+
+            var bundleWriter = shouldBuildBundle ? new NetDataWriter() : null;
+            var bulkSender = shouldBuildBundle ? new BulkEventPacketSender(NetPacketProcessor, bundleWriter, Registries) : null;
+
+            foreach (var message in messages) {
+                _eventsThisSecond++;
+            
+                if (_eventListeners.TryGetValue(HashCache<T>.Id, out var handler)) {
+                    handler(message);
+                }
+
+                if (!shouldBuildBundle) continue;
+                
+                if (message is IPacketedEvent packetedEvent) {
+                    packetedEvent.SendPacket(bulkSender);
+                } else {
+                    NetPacketProcessor.Write(bundleWriter, message);
+                }
+            }
+
+            if (shouldBuildBundle && bundleWriter.Length > 0) {
+                var firstMessage = messages.First();
+                
+                var bundle = new BulkEventBundle {
+                    EventData = bundleWriter.CopyData()
+                };
+                Send(bundle, firstMessage.NetworkDeliveryMethod, firstMessage.Channel);
+            }
+        }
+
+        private void HandleBulkEvents(BulkEventBundle bundle) {
+            NetPacketProcessor.ReadAllPackets(new NetDataReader(bundle.EventData), this);
+        }
+
         private void SendEventPacket<T>(T message) where T : AbstractEvent, new() {
             if (message is IPacketedEvent packetedEvent) {
                 packetedEvent.SendPacket(this);
             } else {
-                Send(message, message.NetworkDeliveryMethod);                        
+                Send(message, message.NetworkDeliveryMethod, message.Channel);
             }
         }
 
@@ -330,12 +398,17 @@ namespace Rover656.Survivors.Framework {
                 // Computes average.
                 _updatesPerSecond = Mathf.FloorToInt((_updatesPerSecond + _updatesThisSecond) / (1 + _updateTimeCounter));
                 _eventsPerSecond = Mathf.FloorToInt((_eventsPerSecond + _eventsThisSecond) / (1 + _updateTimeCounter));
+                _systemRuntimePerSecond = Mathf.FloorToInt((_systemRuntimePerSecond + _systemRunTimeThisSecond) / (1 + _updateTimeCounter));
                 _updateTimeCounter = 0;
                 _updatesThisSecond = 0;
                 _eventsThisSecond = 0;
+                _systemRunTimeThisSecond = 0;
 
                 Debug.Log($"Updates per second: {_updatesPerSecond}");
                 Debug.Log($"Events per second: {_eventsPerSecond}");
+                
+                BasicPerformanceMonitor.Report(_entities.Count, _updatesPerSecond, _eventsPerSecond, _activeSystemTypes.Count, _systemRuntimePerSecond,
+                    NetManager?.Statistics);
             }
             
             if (Environment == Environment.Local) {
@@ -360,6 +433,8 @@ namespace Rover656.Survivors.Framework {
 
             float systemEndTime = Time.realtimeSinceStartup;
             float systemRunTime = systemEndTime - systemStartTime;
+
+            _systemRunTimeThisSecond += systemRunTime;
 
             // Local makes decisions on system load
             if (Environment == Environment.Local)

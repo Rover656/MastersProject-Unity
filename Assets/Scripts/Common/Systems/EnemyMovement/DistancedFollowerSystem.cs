@@ -1,8 +1,9 @@
-using System.Linq;
+using System;
+using System.Collections.Generic;
 using Rover656.Survivors.Common.Entities;
 using Rover656.Survivors.Common.Registries;
 using Rover656.Survivors.Common.World;
-using Rover656.Survivors.Framework;
+using Rover656.Survivors.Framework.Events;
 using Rover656.Survivors.Framework.Systems;
 using UnityEngine;
 
@@ -17,8 +18,8 @@ namespace Rover656.Survivors.Common.Systems.EnemyMovement
 
         public void Update(AbstractLevel abstractLevel, float deltaTime)
         {
-            // Only run 20 times per second, we don't need hyper fast follower systems
-            if (!abstractLevel.EveryNSeconds(1 / 20f)) {
+            // Only run 15 times per second, we don't need hyper fast follower systems
+            if (!abstractLevel.EveryNSeconds(1 / 15f)) {
                 return;
             }
             
@@ -33,19 +34,45 @@ namespace Rover656.Survivors.Common.Systems.EnemyMovement
                 return;
             }
             
+            var vectorChanges = new List<(Guid, Vector2)>();
             foreach (var enemy in enemies)
             {
                 var toPlayer = (player.Position - enemy.Position);
 
+                Vector2 vector;
                 if (toPlayer.magnitude < DistanceToMelee) {
-                    enemy.SetMovementVector(toPlayer.normalized);
+                    vector = toPlayer.normalized;
                 } else if (toPlayer.magnitude < DistanceToMaintain) {
-                    enemy.SetMovementVector(-toPlayer.normalized);
+                    vector = -toPlayer.normalized;
                 } else if (toPlayer.magnitude > DistanceToMaintain * 1.2f) {
-                    enemy.SetMovementVector(toPlayer.normalized);
+                    vector = toPlayer.normalized;
                 } else {
-                    enemy.SetMovementVector(Vector2.zero);
+                    vector = Vector2.zero;
                 }
+
+                if (enemy.MovementVector != vector) {
+                    vectorChanges.Add((enemy.Id, vector));
+                }
+            }
+            
+            // Bulk fire events
+            var movementChangeEvents = new List<EntityMovementVectorChangedEvent>(abstractLevel.MaxBulkPackets);
+            for (var i = 0; i < vectorChanges.Count; i += abstractLevel.MaxBulkPackets) {
+                // Flush for next batch
+                movementChangeEvents.Clear();
+                
+                // Add all events
+                for (var j = i; j < vectorChanges.Count && j < i + abstractLevel.MaxBulkPackets; j++) {
+                    var change = vectorChanges[j];
+                    movementChangeEvents.Add(new EntityMovementVectorChangedEvent()
+                    {
+                        EntityId = change.Item1,
+                        MovementVector = change.Item2,
+                    });
+                }
+                
+                // Fire all events
+                abstractLevel.PostMany(movementChangeEvents);
             }
         }
     }

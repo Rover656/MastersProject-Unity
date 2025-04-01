@@ -37,11 +37,11 @@ namespace Rover656.Survivors.Common.Entities
         public Player()
         {
             Health = MaxHealth;
-            _inventory.Add(new ItemStack()
-            {
-                Item = Registries.Items.ThrowingKnives,
-                Count = 200,
-            });
+            // _inventory.Add(new ItemStack()
+            // {
+            //     Item = Registries.Items.ThrowingKnives,
+            //     Count = 3,
+            // });
         }
 
         public int CalculateDamageTaken(int originalDamage) {

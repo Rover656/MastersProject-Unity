@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using LiteNetLib;
 using UnityEngine;
@@ -25,6 +24,7 @@ namespace Rover656.Survivors.Server {
             _listener.NetworkLatencyUpdateEvent += ListenerOnNetworkLatencyUpdateEvent;
 
             _netManager = new NetManager(_listener);
+            _netManager.ChannelsCount = 4;
             _netManager.Start(listeningPort);
         }
 

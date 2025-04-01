@@ -55,6 +55,10 @@ namespace Rover656.Survivors.Common.World {
             }
 
             base.Update();
+
+            if (EveryNSeconds(15)) {
+                BasicPerformanceMonitor.SaveToFile();
+            }
         }
 
         public bool EveryNSeconds(float seconds, float offset = 0)

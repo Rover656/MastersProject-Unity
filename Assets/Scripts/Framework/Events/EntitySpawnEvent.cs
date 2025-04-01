@@ -7,6 +7,7 @@ using Rover656.Survivors.Framework.EventBus;
 namespace Rover656.Survivors.Framework.Events {
     public class EntitySpawnEvent : AbstractEvent, IPacketedEvent {
         
+        public override byte Channel => 0;
         public override DeliveryMethod NetworkDeliveryMethod => DeliveryMethod.ReliableOrdered;
         
         public AbstractEntity Entity { get; set; }
@@ -44,8 +45,8 @@ namespace Rover656.Survivors.Framework.Events {
             }
         }
 
-        public void SendPacket(IHybridGameAccess game) {
-            game.Send(new Packet(Entity), NetworkDeliveryMethod);
+        public void SendPacket(IPacketSender game) {
+            game.Send(new Packet(Entity), NetworkDeliveryMethod, Channel);
         }
     }
 }

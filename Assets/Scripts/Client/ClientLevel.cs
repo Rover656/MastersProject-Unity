@@ -87,6 +87,7 @@ namespace Rover656.Survivors.Client {
             listener.PeerDisconnectedEvent += OnPeerDisconnected;
 
             NetManager = new NetManager(listener);
+            NetManager.ChannelsCount = 4;
             NetManager.Start();
 
             var levelData = new NetDataWriter();

@@ -1,0 +1,107 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using LiteNetLib;
+using UnityEditor;
+using UnityEngine;
+
+namespace Rover656.Survivors.Framework.Metrics {
+    public class BasicPerformanceMonitor {
+        private string _runIdentifier;
+        private List<Metrics> _metrics = new();
+
+        public BasicPerformanceMonitor(string runIdentifier) {
+            _runIdentifier = runIdentifier + "-" + Guid.NewGuid().ToString("N");
+        }
+
+        public void Report(int entityCount, int updatesPerSecond, int eventsPerSecond, int systemCount,
+            float systemRunTime, NetStatistics netStatistics) {
+            // TODO: Create and record metrics.
+
+            _metrics.Add(new Metrics() {
+                Time = Time.time,
+                EntityCount = entityCount,
+                UpdatesPerSecond = updatesPerSecond,
+                EventsPerSecond = eventsPerSecond,
+                SystemCount = systemCount,
+                AverageSystemRunTime = systemRunTime,
+                BytesReceived = netStatistics?.BytesReceived ?? 0,
+                BytesSent = netStatistics?.BytesSent ?? 0,
+                PacketsSent = netStatistics?.PacketsSent ?? 0,
+                PacketsReceived = netStatistics?.PacketsReceived ?? 0,
+                PacketLossPercent = netStatistics?.PacketLossPercent ?? 0,
+            });
+        }
+
+        public void SaveToFile() {
+            var csv = ToCSV();
+
+            // The target file path e.g.
+#if UNITY_EDITOR
+            var folder = Application.streamingAssetsPath;
+
+            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+#else
+            var folder = Application.persistentDataPath;
+#endif
+
+            var filePath = Path.Combine(folder, _runIdentifier + ".csv");
+
+            using (var writer = new StreamWriter(filePath, false)) {
+                writer.Write(csv);
+            }
+
+            Debug.Log($"Metrics saved to: {filePath}");
+
+#if UNITY_EDITOR
+            AssetDatabase.Refresh();
+#endif
+        }
+
+        private string ToCSV() {
+            var sb = new StringBuilder(
+                "Time,EntityCount,UpdatesPerSecond,EventsPerSecond,SystemCount,AverageSystemRunTime,BytesReceived,BytesSent,PacketsSent,PacketsReceived,PacketLossPercent");
+            foreach (var metric in _metrics) {
+                sb.Append("\n")
+                    .Append(metric.Time)
+                    .Append(",")
+                    .Append(metric.EntityCount)
+                    .Append(",")
+                    .Append(metric.UpdatesPerSecond)
+                    .Append(",")
+                    .Append(metric.EventsPerSecond)
+                    .Append(",")
+                    .Append(metric.SystemCount)
+                    .Append(",")
+                    .Append(metric.AverageSystemRunTime)
+                    .Append(",")
+                    .Append(metric.BytesReceived)
+                    .Append(",")
+                    .Append(metric.BytesSent)
+                    .Append(",")
+                    .Append(metric.PacketsSent)
+                    .Append(",")
+                    .Append(metric.PacketsReceived)
+                    .Append(",")
+                    .Append(metric.PacketLossPercent);
+            }
+
+            return sb.ToString();
+        }
+
+        private class Metrics {
+            public float Time { get; set; }
+            public int EntityCount { get; set; }
+            public int UpdatesPerSecond { get; set; }
+            public int EventsPerSecond { get; set; }
+            public int SystemCount { get; set; }
+            public float AverageSystemRunTime { get; set; }
+            public long BytesReceived { get; set; }
+            public long BytesSent { get; set; }
+            public long PacketsSent { get; set; }
+            public long PacketsReceived { get; set; }
+            public long PacketLossPercent { get; set; }
+        }
+    }
+}

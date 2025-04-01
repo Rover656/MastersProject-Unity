@@ -8,6 +8,7 @@ namespace Rover656.Survivors.Common.Events
 {
     public class EntityHealthChangedEvent : AbstractEvent, IPacketedEvent
     {
+        public override byte Channel => 0;
         public override DeliveryMethod NetworkDeliveryMethod => DeliveryMethod.ReliableOrdered;
     
         public Guid EntityId { get; set; }
@@ -48,8 +49,8 @@ namespace Rover656.Survivors.Common.Events
             }
         }
 
-        public void SendPacket(IHybridGameAccess game) {
-            game.Send(new Packet(this), NetworkDeliveryMethod);
+        public void SendPacket(IPacketSender game) {
+            game.Send(new Packet(this), NetworkDeliveryMethod, Channel);
         }
     }
 }

@@ -8,8 +8,8 @@ using Environment = Rover656.Survivors.Framework.Systems.Environment;
 
 namespace Rover656.Survivors.Framework.Events
 {
-    public class GameSystemActivationEvent : AbstractEvent, IPacketedEvent
-    {
+    public class GameSystemActivationEvent : AbstractEvent, IPacketedEvent {
+        public override byte Channel => 0;
         public override DeliveryMethod NetworkDeliveryMethod => DeliveryMethod.ReliableOrdered;
         
         public GameSystemType Type { get; set; }
@@ -32,8 +32,8 @@ namespace Rover656.Survivors.Framework.Events
             public Packet() {
             }
             
-            public Packet(IHybridGameAccess game, GameSystemType type, Environment activeEnvironment) {
-                GameSystemTypeId = game.Registries.GetIdFrom(FrameworkRegistries.GameSystemTypes, type);
+            public Packet(IRegistryProvider registries, GameSystemType type, Environment activeEnvironment) {
+                GameSystemTypeId = registries.GetIdFrom(FrameworkRegistries.GameSystemTypes, type);
                 ActiveEnvironment = activeEnvironment;
             }
 
@@ -42,8 +42,8 @@ namespace Rover656.Survivors.Framework.Events
             }
         }
 
-        public void SendPacket(IHybridGameAccess game) {
-            game.Send(new Packet(game, Type, ActiveEnvironment), NetworkDeliveryMethod);
+        public void SendPacket(IPacketSender game) {
+            game.Send(new Packet(game.Registries, Type, ActiveEnvironment), NetworkDeliveryMethod, Channel);
         }
     }
 }

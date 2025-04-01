@@ -5,7 +5,8 @@ namespace Rover656.Survivors.Framework.Events
 {
     public class GameTickEvent : AbstractEvent
     {
-        public override DeliveryMethod NetworkDeliveryMethod => DeliveryMethod.ReliableSequenced;
+        public override byte Channel => 0;
+        public override DeliveryMethod NetworkDeliveryMethod => DeliveryMethod.Sequenced;
         
         public byte[] MetaData { get; set; }
     }

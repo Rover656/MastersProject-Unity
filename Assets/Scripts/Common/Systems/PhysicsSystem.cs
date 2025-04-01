@@ -1,8 +1,9 @@
 using System;
+using System.Collections.Generic;
 using Rover656.Survivors.Common.Registries;
 using Rover656.Survivors.Common.Utility;
 using Rover656.Survivors.Common.World;
-using Rover656.Survivors.Framework;
+using Rover656.Survivors.Framework.Events;
 using Rover656.Survivors.Framework.Systems;
 using UnityEngine;
 
@@ -17,11 +18,11 @@ namespace Rover656.Survivors.Common.Systems
         public GameSystemType Type => SystemTypes.Physics;
         
         public void Update(AbstractLevel abstractLevel, float deltaTime) {
-            /*if (!abstractLevel.EveryNSeconds(1 / 30f)) {
+            if (!abstractLevel.EveryNSeconds(1 / 60f)) {
                 return;
             }
 
-            deltaTime = 1 / 30f;*/
+            deltaTime = 1 / 30f;
             
             // Fake load to try and cause a performance impact.
             // counter exists to ensure this loop has a side effect
@@ -30,6 +31,8 @@ namespace Rover656.Survivors.Common.Systems
             // {
             //     counter += i;
             // }
+
+            var positionChanges = new List<(Guid, Vector2)>();
             
             foreach (var layer in abstractLevel.EntitiesByPhysicsLayer.Keys)
             {
@@ -52,7 +55,12 @@ namespace Rover656.Survivors.Common.Systems
 
                             if (proposedPosition.Intersects(entity.Size, other.Bounds, out var penetrationVector)) {
                                 // Separate entities if they are fully intersecting
-                                entity.SetPosition(entity.Position + penetrationVector);
+                                //entity.SetPosition(entity.Position + penetrationVector);
+                                
+                                var newPosition = entity.Position + penetrationVector;
+                                if (entity.Position != newPosition) {
+                                    positionChanges.Add((entity.Id, newPosition));
+                                }
 
                                 // Stop movement if the entity collides in its path
                                 velocity = Vector2.zero;
@@ -62,8 +70,33 @@ namespace Rover656.Survivors.Common.Systems
                     }
 
                     // Update position if no collision happened
-                    entity.SetPosition(entity.Position + (velocity * deltaTime));
+                    if (velocity.magnitude > 0) {
+                        var newPosition = entity.Position + (velocity * deltaTime);
+                        if (entity.Position != newPosition) {
+                            positionChanges.Add((entity.Id, newPosition));
+                        }
+                    }
                 }
+            }
+            
+            // Bulk fire events
+            var positionChangeEvents = new List<EntityPositionChangedEvent>(abstractLevel.MaxBulkPackets);
+            for (var i = 0; i < positionChanges.Count; i += abstractLevel.MaxBulkPackets) {
+                // Flush for next batch
+                positionChangeEvents.Clear();
+                
+                // Add all events
+                for (var j = i; j < positionChanges.Count && j < i + abstractLevel.MaxBulkPackets; j++) {
+                    var change = positionChanges[j];
+                    positionChangeEvents.Add(new EntityPositionChangedEvent()
+                    {
+                        EntityId = change.Item1,
+                        Position = change.Item2,
+                    });
+                }
+                
+                // Fire all events
+                abstractLevel.PostMany(positionChangeEvents);
             }
         }
     }
