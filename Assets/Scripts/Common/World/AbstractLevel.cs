@@ -51,7 +51,7 @@ namespace Rover656.Survivors.Common.World {
             _deltaTime = Time.deltaTime;
             
             // Client handles time advancement.
-            if (Environment == Environment.Local)
+            if (Environment == Environment.Local && !IsPaused)
             {
                 GameTime += DeltaTime;
             }

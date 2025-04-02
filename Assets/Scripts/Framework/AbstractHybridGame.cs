@@ -90,6 +90,8 @@ namespace Rover656.Survivors.Framework {
         private float _updateTimeCounter;
         
         protected readonly BasicPerformanceMonitor BasicPerformanceMonitor;
+        
+        public bool IsPaused { get; private set; }
 
         protected AbstractHybridGame(IRegistryProvider registries, NetManager netManager) {
             Registries = registries;
@@ -120,6 +122,8 @@ namespace Rover656.Survivors.Framework {
             
             // Register event subscriptions
             Subscribe<GameTickEvent>(Handle);
+            Subscribe<GamePauseEvent>(Handle);
+            Subscribe<GameResumeEvent>(Handle);
             Subscribe<GameSystemActivationEvent>(Handle, GameSystemActivationEvent.Register);
             Subscribe<EntityMovementVectorChangedEvent>(OnEntityMovementVectorChanged);
             Subscribe<EntityPositionChangedEvent>(OnEntityPositionChanged);
@@ -128,6 +132,14 @@ namespace Rover656.Survivors.Framework {
             
             // Create performance monitor
             BasicPerformanceMonitor = new BasicPerformanceMonitor(Environment.ToString());
+        }
+
+        public void Pause() {
+            Post(new GamePauseEvent());
+        }
+
+        public void Resume() {
+            Post(new GameResumeEvent());
         }
 
         public void Send<T>(T packet, DeliveryMethod deliveryMethod, byte channel = 0) where T : class, new() {
@@ -266,6 +278,9 @@ namespace Rover656.Survivors.Framework {
         #region Spawn Remote Game
 
         public void SerializeWorld(NetDataWriter writer) {
+            // Write paused state
+            writer.Put(IsPaused);
+            
             // Write all entities into the packet.
             writer.Put(_entities.Count);
             for (int i = 0; i < _entities.Count; i++) {
@@ -309,6 +324,9 @@ namespace Rover656.Survivors.Framework {
         }
 
         public void DeserializeWorld(NetDataReader reader) {
+            // Load pause state
+            IsPaused = reader.GetBool();
+            
             // Spawn all entities from the remote.
             int entityCount = reader.GetInt();
             for (int i = 0; i < entityCount; i++) {
@@ -474,6 +492,11 @@ namespace Rover656.Survivors.Framework {
                     MetaData = meta.Data,
                 });
             }
+
+            // Do not run systems while paused.
+            if (IsPaused) {
+                return;
+            }
             
             // Update all systems.
             float systemStartTime = Time.realtimeSinceStartup;
@@ -623,6 +646,22 @@ namespace Rover656.Survivors.Framework {
         }
 
         protected virtual void OnEntityDestroyed(AbstractEntity entity) {
+        }
+
+        private void Handle(GamePauseEvent gamePauseEvent) {
+            IsPaused = true;
+            OnPaused();
+        }
+
+        protected virtual void OnPaused() {
+        }
+
+        private void Handle(GameResumeEvent resumeEvent) {
+            IsPaused = false;
+            OnResumed();
+        }
+
+        protected virtual void OnResumed() {
         }
 
         #endregion
