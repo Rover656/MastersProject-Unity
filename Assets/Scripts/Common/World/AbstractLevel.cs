@@ -23,28 +23,23 @@ namespace Rover656.Survivors.Common.World {
 
         public Player Player { get; protected set; }
 
-        public PhysicsSystem PhysicsSystem { get; }
-        public DumbFollowerSystem DumbFollowerSystem { get; }
-        public DistancedFollowerSystem DistancedFollowerSystem { get; }
-        public DamageSystem DamageSystem { get; }
-        public WeaponSystem WeaponSystem { get; }
-        public ParticleSystem ParticleSystem { get; }
-        public DirectorSystem DirectorSystem { get; }
-
         protected AbstractLevel(NetManager netManager) : base(SurvivorsRegistries.Instance, netManager) {
             // Register all systems.
-            PhysicsSystem = AddSystem(new PhysicsSystem());
-            DumbFollowerSystem = AddSystem(new DumbFollowerSystem());
-            DistancedFollowerSystem = AddSystem(new DistancedFollowerSystem());
-            DamageSystem = AddSystem(new DamageSystem());
-            WeaponSystem = AddSystem(new WeaponSystem());
-            ParticleSystem = AddSystem(new ParticleSystem());
-            DirectorSystem = AddSystem(new DirectorSystem());
+            AddSystem(new PhysicsSystem());
+            AddSystem(new DumbFollowerSystem());
+            AddSystem(new DistancedFollowerSystem());
+            AddSystem(new DamageSystem());
+            AddSystem(new WeaponSystem());
+            AddSystem(new ParticleSystem());
+            AddSystem(new DirectorSystem());
+            AddSystem(new ExperienceSystem());
 
             // Subscribe to game events
             Subscribe<EntityHealthChangedEvent>(OnEntityHealthChanged, EntityHealthChangedEvent.Register);
             Subscribe<EntityDiedEvent>(OnEntityDied);
             Subscribe<PlayerCollectItemEvent>(OnPlayerCollectedItem, PlayerCollectItemEvent.Register);
+            Subscribe<PlayerExperienceEvent>(OnPlayerExperienceChanged);
+            Subscribe<PlayerLevelUpEvent>(OnPlayerLevelChanged);
         }
 
         public override void Update() {
@@ -145,12 +140,37 @@ namespace Rover656.Survivors.Common.World {
             if (Player.Id == diedEvent.EntityId) {
                 // Debug.Log("Player died! Need to pause the game loop and show death screen etc (i.e. hand back to Unity)");
             } else {
+                // Spawn experience shards
+                var entity = GetEntity(diedEvent.EntityId);
+                if (entity is Enemy enemy) {
+                    if (enemy.GetOffset(0f, 1f) < 0.2f) {
+                        AddNewEntity(EntityTypes.BasicExperienceShard.Create(), enemy.Position);
+                    }
+                }
+                
                 DestroyEntity(diedEvent.EntityId);
             }
         }
 
         protected virtual void OnPlayerCollectedItem(PlayerCollectItemEvent collectEvent) {
             Player.LocalAddItem(collectEvent.Stack);
+        }
+
+        protected virtual void OnPlayerExperienceChanged(PlayerExperienceEvent experienceEvent) {
+            Player.Experience = experienceEvent.Experience;
+        }
+        
+        protected virtual void OnPlayerLevelChanged(PlayerLevelUpEvent levelEvent) {
+            if (levelEvent.Level != Player.Level) {
+                Player.UpdateStats();
+                
+                // Local set is fine here because event is fired on both sides.
+                // TODO: In paper discuss that sometimes an event is unnecessary, but at the cost of possible desync.
+                Player.LocalSetHealth(Player.MaxHealth);
+            }
+            
+            Player.Level = levelEvent.Level;
+            Player.NextExperienceMilestone = levelEvent.NextExperienceMilestone;
         }
     }
 }

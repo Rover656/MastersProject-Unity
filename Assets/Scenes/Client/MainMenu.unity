@@ -360,8 +360,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14
-  m_fontSizeBase: 14
+  m_fontSize: 48
+  m_fontSizeBase: 48
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -569,7 +569,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 547456074}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1299412956}
+        m_TargetAssemblyTypeName: Rover656.Survivors.Client.MainMenu, Assembly-CSharp
+        m_MethodName: StartLocalBenchmark
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &547456074
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -642,10 +654,10 @@ RectTransform:
   - {fileID: 1329837112}
   m_Father: {fileID: 1299412955}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 374.2, y: 55.9}
-  m_SizeDelta: {x: 160, y: 30}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 200, y: 50}
+  m_SizeDelta: {x: 300, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &694147221
 MonoBehaviour:
@@ -704,7 +716,7 @@ MonoBehaviour:
   m_HideSoftKeyboard: 0
   m_CharacterValidation: 0
   m_RegexValue: 
-  m_GlobalPointSize: 14
+  m_GlobalPointSize: 48
   m_CharacterLimit: 0
   m_OnEndEdit:
     m_PersistentCalls:
@@ -1356,7 +1368,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1295343955}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1299412956}
+        m_TargetAssemblyTypeName: Rover656.Survivors.Client.MainMenu, Assembly-CSharp
+        m_MethodName: PlayStandard
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1295343955
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1407,6 +1431,7 @@ GameObject:
   - component: {fileID: 1299412954}
   - component: {fileID: 1299412953}
   - component: {fileID: 1299412952}
+  - component: {fileID: 1299412956}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -1502,6 +1527,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1299412956
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299412951}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1cfdd1c405d94e2782a5f30a5cfaf742, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  clientGameScene: ClientLevel
+  remoteIPField: {fileID: 694147221}
 --- !u!1 &1329837111
 GameObject:
   m_ObjectHideFlags: 0
@@ -1749,8 +1788,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "127.0.0.1:1337\u200B"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: fcd7f5bf2c5b3b04e8e0c407be173f5b, type: 2}
+  m_sharedMaterial: {fileID: -6193221110114489079, guid: fcd7f5bf2c5b3b04e8e0c407be173f5b, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1774,8 +1813,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14
-  m_fontSizeBase: 14
+  m_fontSize: 48
+  m_fontSizeBase: 48
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1908,7 +1947,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1619336610}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1299412956}
+        m_TargetAssemblyTypeName: Rover656.Survivors.Client.MainMenu, Assembly-CSharp
+        m_MethodName: StartRemoteBenchmark
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1619336610
 MonoBehaviour:
   m_ObjectHideFlags: 0

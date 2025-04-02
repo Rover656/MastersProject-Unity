@@ -33,8 +33,7 @@ namespace Rover656.Survivors.Client {
                 _entityPrefabMap.Add(pair.name, pair.prefab);
             }
             
-            // TODO: Global somewhere for this to be set from the main menu :)
-            Level = new ClientLevel(this, "127.0.0.1:1337");
+            Level = new ClientLevel(this, ClientRuntimeOptions.RemoteEndpoint);
             
             // Add entities that were added during initialization.
             foreach (var entity in Level.Entities)

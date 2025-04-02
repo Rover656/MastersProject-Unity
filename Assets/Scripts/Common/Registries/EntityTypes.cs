@@ -5,16 +5,16 @@ using Rover656.Survivors.Framework.Entity;
 
 namespace Rover656.Survivors.Common.Registries {
     public static class EntityTypes {
-        public static EntityType<ExperienceShard> BasicExperienceShard { get; } = new(() => new ExperienceShard(1));
+        public static EntityType<ExperienceShard> BasicExperienceShard { get; } = new(() => new ExperienceShard(1), GeneralEntityTags.Experience);
 
         public static EntityType<Player> Player { get; } =
             new(() => new Player(), GeneralEntityTags.Player, GeneralEntityTags.Damageable, GeneralEntityTags.Inventory);
 
-        public static EntityType<Enemy> Bat { get; } = new(() => new Enemy(Bat, 6f, 5, 2, true, new()),
+        public static EntityType<Enemy> Bat { get; } = new(() => new Enemy(Bat, 4f, 5, 2, true, new()),
             GeneralEntityTags.Enemy,
             EnemyMovementTag.DumbFollower, GeneralEntityTags.Damager, GeneralEntityTags.Damageable, GeneralEntityTags.Inventory);
 
-        public static EntityType<Enemy> RuneWizard { get; } = new(() => new Enemy(RuneWizard, 4f, 15, 3, false, new() {
+        public static EntityType<Enemy> RuneWizard { get; } = new(() => new Enemy(RuneWizard, 1f, 15, 3, false, new() {
                 new ItemStack {
                     Item = Items.ThrowingKnives,
                     Count = 1,

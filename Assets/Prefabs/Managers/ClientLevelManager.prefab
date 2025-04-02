@@ -55,6 +55,8 @@ MonoBehaviour:
     prefab: {fileID: 3202400305350403037, guid: e88a8097b4e6e4c0d9144b8dfb8ad249, type: 3}
   - name: rune_wizard
     prefab: {fileID: 3202400305350403037, guid: ee5353ef7ae634b4889610c3733199d8, type: 3}
+  - name: basic_experience_shard
+    prefab: {fileID: 3202400305350403037, guid: d5b6a5280d6e81b4784ae35c3afa45cd, type: 3}
 --- !u!1 &8140376741900323961
 GameObject:
   m_ObjectHideFlags: 0

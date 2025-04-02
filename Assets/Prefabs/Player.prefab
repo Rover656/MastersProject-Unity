@@ -37,7 +37,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -118.130005, y: 114.53999}
+  m_AnchoredPosition: {x: -118.129974, y: 114.53999}
   m_SizeDelta: {x: -236.25, y: -315.21}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6968980438540469294
@@ -872,6 +872,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   PlayerHealthBar: {fileID: 956425420555529871}
   TimeText: {fileID: 7115384030128620228}
+  LevelText: {fileID: 8647688481028065055}
   ExperienceBar: {fileID: 6010287804351963760}
   inventoryItemPrefab: {fileID: 0}
 --- !u!1 &3830762529039684868

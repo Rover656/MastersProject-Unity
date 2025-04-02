@@ -14,17 +14,18 @@ namespace Rover656.Survivors.Common.Entities
         public override bool CanCollide => false;
         public override int PhysicsLayer => CollisionLayers.Player;
         
-        public override float MovementSpeed => 32f;
+        public override float MovementSpeed => 16f;
         
-        public int MaxHealth => 12 + _healthIncrease;
+        public int MaxHealth => 32 + _healthIncrease;
         public int Health { get; private set; }
         
         public float InvincibilityDuration => 0.25f;
         public float InvincibleUntil { get; private set; }
         
         public int Experience { get; set; }
+        public int Level { get; set; } = 1;
 
-        public int NextExperienceMilestone { get; set; } = 5;
+        public int NextExperienceMilestone { get; set; } = 4;
 
         private readonly List<ItemStack> _inventory = new();
 
@@ -37,11 +38,11 @@ namespace Rover656.Survivors.Common.Entities
         public Player()
         {
             Health = MaxHealth;
-            // _inventory.Add(new ItemStack()
-            // {
-            //     Item = Registries.Items.ThrowingKnives,
-            //     Count = 3,
-            // });
+            _inventory.Add(new ItemStack()
+            {
+                Item = Registries.Items.ThrowingKnives,
+                Count = 1,
+            });
         }
 
         public int CalculateDamageTaken(int originalDamage) {
@@ -62,18 +63,6 @@ namespace Rover656.Survivors.Common.Entities
             }
         }
 
-        public void InternalAddExperience(int experience)
-        {
-            Experience += experience;
-            if (Experience >= NextExperienceMilestone)
-            {
-                Experience -= NextExperienceMilestone;
-                NextExperienceMilestone = (int)MathF.Floor(NextExperienceMilestone * 1.25f);
-                
-                // TODO: Fire level up event, which will open a menu on client side and pause gameplay.
-            }
-        }
-
         public void LocalSetHealth(int health)
         {
             Health = health;
@@ -83,9 +72,9 @@ namespace Rover656.Survivors.Common.Entities
             InvincibleUntil = invincibleUntil;
         }
         
-        // Cache item improvements.
-        private void ProcessItems() {
-            _healthIncrease = 0;
+        // Cache buffs
+        public void UpdateStats() {
+            _healthIncrease = 6 * (Level - 1);
             _totalDamageResistance = 0;
             
             foreach (var stack in _inventory) {

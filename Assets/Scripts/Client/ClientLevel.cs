@@ -67,6 +67,12 @@ namespace Rover656.Survivors.Client {
             base.OnEntityHealthChanged(healthChangedEvent);
         }
 
+        protected override void OnPlayerLevelChanged(PlayerLevelUpEvent levelEvent) {
+            base.OnPlayerLevelChanged(levelEvent);
+            
+            // TODO: Pause and allow user to pick a new item.
+        }
+
         #endregion
 
         public override void Update() {
@@ -74,7 +80,8 @@ namespace Rover656.Survivors.Client {
             if (NetManager?.IsRunning ?? false) {
                 NetManager.PollEvents();
             } else {
-                if (EveryNSeconds(4)) {
+                // Attempt to reconnect every 30 seconds.
+                if (EveryNSeconds(30)) {
                     ConnectToRemoteServer();
                 }
             }

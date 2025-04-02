@@ -9,6 +9,7 @@ namespace Rover656.Survivors.Client
         public SlicedFilledImage PlayerHealthBar;
 
         public TextMeshProUGUI TimeText;
+        public TextMeshProUGUI LevelText;
 
         public SlicedFilledImage ExperienceBar;
         
@@ -36,7 +37,8 @@ namespace Rover656.Survivors.Client
             PlayerHealthBar.fillAmount = Level.Player.Health / (float)Level.Player.MaxHealth;
 
             // TODO
-            ExperienceBar.fillAmount = 0.5f;
+            ExperienceBar.fillAmount = Level.Player.Experience / (float)Level.Player.NextExperienceMilestone;
+            LevelText.text = $"Level {Level.Player.Level}";
             
             // Update clock
             int minutes = (int)(Level.GameTime / 60);

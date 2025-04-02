@@ -10,5 +10,6 @@ namespace Rover656.Survivors.Common
         Particle,
         FaceMovementVector,
         Inventory,
+        Experience,
     }
 }
