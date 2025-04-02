@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using Rover656.Survivors.Common.Entities;
@@ -8,6 +9,7 @@ using Rover656.Survivors.Common.Systems;
 using Rover656.Survivors.Common.Systems.EnemyMovement;
 using Rover656.Survivors.Framework;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using Environment = Rover656.Survivors.Framework.Systems.Environment;
 using ParticleSystem = Rover656.Survivors.Common.Systems.ParticleSystem;
 
@@ -58,6 +60,8 @@ namespace Rover656.Survivors.Common.World {
 
             if (EveryNSeconds(15)) {
                 BasicPerformanceMonitor.SaveToFile();
+                
+                Debug.Log($"Entity count: {Entities.Count}");
             }
         }
 
@@ -73,6 +77,10 @@ namespace Rover656.Survivors.Common.World {
 
             if (seconds < DeltaTime) {
                 return true;
+            }
+
+            if (GameTime < seconds) {
+                return false;
             }
 
             float prevTime = (GameTime + offset) - DeltaTime;
@@ -118,7 +126,7 @@ namespace Rover656.Survivors.Common.World {
         protected virtual void OnEntityHealthChanged(EntityHealthChangedEvent healthChangedEvent) {
             if (GetEntity(healthChangedEvent.EntityId) is not IDamageable damageable) return;
 
-            Debug.Log($"Entity {healthChangedEvent.EntityId} took {healthChangedEvent.Delta} damage.");
+            // Debug.Log($"Entity {healthChangedEvent.EntityId} took {healthChangedEvent.Delta} damage.");
 
             damageable.LocalSetHealth(damageable.Health - healthChangedEvent.Delta);
 
@@ -135,7 +143,7 @@ namespace Rover656.Survivors.Common.World {
 
         protected virtual void OnEntityDied(EntityDiedEvent diedEvent) {
             if (Player.Id == diedEvent.EntityId) {
-                Debug.Log("Player died! Need to pause the game loop and show death screen etc (i.e. hand back to Unity)");
+                // Debug.Log("Player died! Need to pause the game loop and show death screen etc (i.e. hand back to Unity)");
             } else {
                 DestroyEntity(diedEvent.EntityId);
             }

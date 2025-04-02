@@ -7,7 +7,9 @@ using Rover656.Survivors.Framework.Entity;
 using Rover656.Survivors.Framework.EventBus;
 using Rover656.Survivors.Framework.Events;
 using Rover656.Survivors.Framework.Metrics;
+using Rover656.Survivors.Framework.Network;
 using Rover656.Survivors.Framework.Systems;
+using Unity.VisualScripting;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 using Environment = Rover656.Survivors.Framework.Systems.Environment;
@@ -33,10 +35,27 @@ namespace Rover656.Survivors.Framework {
 
                 if (_netManager != null) {
                     _netManager.EnableStatistics = true;
+                } else {
+                    IsRemoteReady = false;
                 }
             }
         }
-        protected NetPeer NetPeer { get; set; }
+
+        private NetPeer _netPeer;
+
+        protected NetPeer NetPeer {
+            get => _netPeer;
+            set {
+                _netPeer = value;
+                if (_netPeer == null) {
+                    IsRemoteReady = false;
+                }
+            }
+        }
+        
+        protected bool IsRemoteReady { get; private set; }
+        
+        protected bool HasRemotePeer => NetPeer != null && IsRemoteReady;
         
         public abstract float DeltaTime { get; }
         
@@ -53,7 +72,7 @@ namespace Rover656.Survivors.Framework {
 
         private readonly Dictionary<ulong, Action<object>> _eventListeners = new();
 
-        public IEnumerable<AbstractEntity> Entities => _entities;
+        public IList<AbstractEntity> Entities => _entities;
         public Dictionary<object, List<AbstractEntity>> EntitiesByTag { get; } = new();
         public Dictionary<int, List<AbstractEntity>> EntitiesByPhysicsLayer { get; } = new();
 
@@ -92,6 +111,10 @@ namespace Rover656.Survivors.Framework {
                     return new Vector2(x, y);
                 });
             
+            // Remote setup packet
+            NetPacketProcessor.SubscribeReusable<InitGameStatePacket>(Handle);
+            NetPacketProcessor.SubscribeReusable<RemoteReadyPacket>(Handle);
+            
             // Bulk event handler
             NetPacketProcessor.SubscribeReusable<BulkEventBundle>(HandleBulkEvents);
             
@@ -108,7 +131,7 @@ namespace Rover656.Survivors.Framework {
         }
 
         public void Send<T>(T packet, DeliveryMethod deliveryMethod, byte channel = 0) where T : class, new() {
-            if (NetManager == null || NetPeer == null) {
+            if (!HasRemotePeer) {
                 return;
             }
 
@@ -214,11 +237,13 @@ namespace Rover656.Survivors.Framework {
         /// This is used to fire any missed events once the initial game state is established remotely.
         /// </summary>
         protected void BeginNetworkEventQueue() {
-            if (_shouldQueueEvents) {
-                return;
-            }
+            lock (_queuedEventsLock) {
+                if (_shouldQueueEvents) {
+                    return;
+                }
             
-            _shouldQueueEvents = true;
+                _shouldQueueEvents = true;
+            }
         }
 
         /// <summary>
@@ -249,6 +274,38 @@ namespace Rover656.Survivors.Framework {
             }
             
             SerializeAdditional(writer);
+        }
+
+        private void Handle(InitGameStatePacket initState) {
+            if (Environment != Environment.Remote) {
+                throw new InvalidOperationException();
+            }
+            
+            Debug.Log("Received initial game state from the local game.");
+            
+            DeserializeWorld(new NetDataReader(initState.RawData));
+            
+            var writer = new NetDataWriter();
+            NetPacketProcessor.Write(writer, new RemoteReadyPacket());
+            NetPeer.Send(writer, DeliveryMethod.ReliableOrdered);
+            Debug.Log("Sending ready signal to receive events and systems.");
+        }
+
+        private void Handle(RemoteReadyPacket remoteReadyPacket) {
+            if (Environment != Environment.Local) {
+                throw new InvalidOperationException();
+            }
+            
+            Debug.Log("Remote is ready, firing queued events.");
+            
+            // Finish queueing messages for the remote and fire them all.
+            EndNetworkEventQueue();
+            
+            // Trigger an update immediately.
+            NetManager?.TriggerUpdate();
+            
+            // Start sending packets direct to the remote.
+            IsRemoteReady = true;
         }
 
         public void DeserializeWorld(NetDataReader reader) {
@@ -401,8 +458,8 @@ namespace Rover656.Survivors.Framework {
                 _eventsThisSecond = 0;
                 _systemRunTimeThisSecond = 0;
 
-                Debug.Log($"Updates per second: {_updatesPerSecond}");
-                Debug.Log($"Events per second: {_eventsPerSecond}");
+                // Debug.Log($"Updates per second: {_updatesPerSecond}");
+                // Debug.Log($"Events per second: {_eventsPerSecond}");
                 
                 BasicPerformanceMonitor.Report(_entities.Count, _updatesPerSecond, _eventsPerSecond, _activeSystemTypes.Count, _systemRuntimePerSecond,
                     NetPeer?.Ping ?? 0, NetManager?.Statistics);
@@ -486,7 +543,7 @@ namespace Rover656.Survivors.Framework {
         }
 
         protected virtual void OnEntitySpawn(EntitySpawnEvent spawnEvent) {
-            Debug.Log($"Spawning entity {spawnEvent.Entity.Id} on {Environment}");
+            // Debug.Log($"Spawning entity {spawnEvent.Entity.Id} on {Environment}");
             
             _entities.Add(spawnEvent.Entity);
             _entitiesById.Add(spawnEvent.Entity.Id, spawnEvent.Entity);

@@ -12,7 +12,6 @@ namespace Rover656.Survivors.Server {
         private NetManager _netManager;
         
         private readonly ConcurrentDictionary<NetPeer, ServerLevel> _levels = new();
-        private readonly ConcurrentDictionary<NetPeer, ServerLevel> _pendingLevels = new();
 
         private void OnEnable() {
             _listener = new EventBasedNetListener();
@@ -40,7 +39,6 @@ namespace Rover656.Survivors.Server {
         private void OnDisable() {
             _netManager.Stop();
             _levels.Clear();
-            _pendingLevels.Clear();
         }
 
         private void Update() {
@@ -57,20 +55,13 @@ namespace Rover656.Survivors.Server {
             _netManager.TriggerUpdate();
         }
 
-        private void ListenerOnConnectionRequestEvent(ConnectionRequest request)
-        {
-            var peer = request.Accept();
-            var newLevel = new ServerLevel(_netManager, peer);
-            newLevel.DeserializeWorld(request.Data);
-
-            if (!_pendingLevels.TryAdd(peer, newLevel))
-            {
-                Debug.LogError("Failed to add level to pending levels dictionary.");
-                peer.Disconnect();
-            }
+        private void ListenerOnConnectionRequestEvent(ConnectionRequest request) {
+            Debug.Log($"New connection request from {request.RemoteEndPoint}");
+            request.AcceptIfKey("IAMASECRETKEY");
         }
 
         private void ListenerOnPeerDisconnectedEvent(NetPeer peer, DisconnectInfo disconnectinfo) {
+            Debug.Log($"Peer {peer.Id} disconnected from server: {disconnectinfo.Reason}.");
             if (!_levels.TryRemove(peer, out _))
             {
                 Debug.LogError("Failed to remove level from levels dictionary.");
@@ -83,13 +74,11 @@ namespace Rover656.Survivors.Server {
         }
 
         private void ListenerOnPeerConnectedEvent(NetPeer peer) {
-            if (_pendingLevels.Remove(peer, out var level)) {
-                if (!_levels.TryAdd(peer, level))
-                {
-                    Debug.LogError("Failed to add level to levels dictionary.");
-                    peer.Disconnect();
-                }
-            } else {
+            var newLevel = new ServerLevel(_netManager, peer);
+
+            if (!_levels.TryAdd(peer, newLevel))
+            {
+                Debug.LogError("Failed to add level to levels dictionary.");
                 peer.Disconnect();
             }
         }

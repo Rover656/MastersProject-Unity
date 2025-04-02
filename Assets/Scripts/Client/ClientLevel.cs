@@ -8,6 +8,7 @@ using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework;
 using Rover656.Survivors.Framework.Entity;
 using Rover656.Survivors.Framework.Events;
+using Rover656.Survivors.Framework.Network;
 using UnityEngine;
 using Environment = Rover656.Survivors.Framework.Systems.Environment;
 
@@ -19,11 +20,17 @@ namespace Rover656.Survivors.Client {
 
         private readonly ClientLevelManager _clientLevelManager;
 
-        public ClientLevel(NetManager netManager, ClientLevelManager clientLevelManager) : base(netManager) {
+        private string _remoteEndpoint;
+
+        public ClientLevel(ClientLevelManager clientLevelManager, string remoteEndpoint) : base(null) {
             _clientLevelManager = clientLevelManager;
+            _remoteEndpoint = remoteEndpoint;
             
             // Spawn the player
             Player = AddNewEntity(EntityTypes.Player.Create());
+            
+            // Attempt to connect to remote immediately
+            ConnectToRemoteServer();
         }
         
         #region Unity Scene Updates
@@ -80,9 +87,6 @@ namespace Rover656.Survivors.Client {
         }
 
         private void ConnectToRemoteServer() {
-            // Immediately begin collecting any new events to update the remote state once it is established.
-            BeginNetworkEventQueue();
-            
             var listener = new EventBasedNetListener();
             listener.PeerConnectedEvent += OnPeerConnected;
             listener.NetworkReceiveEvent += OnNetworkReceived;
@@ -92,11 +96,21 @@ namespace Rover656.Survivors.Client {
             NetManager = new NetManager(listener);
             NetManager.ChannelsCount = 4;
             NetManager.Start();
-
-            var levelData = new NetDataWriter();
-            SerializeWorld(levelData);
             
-            NetPeer = NetManager.Connect("127.0.0.1", 1337, levelData);
+            // Use _remoteEndpoint, but get the port from the end, separated by a colon.
+            var port = _remoteEndpoint.Split(':')[1];
+            var ip = _remoteEndpoint.Split(':')[0];
+            
+            // Default to 1337 if no port specified
+            if (string.IsNullOrEmpty(port)) {
+                port = "1337";
+            }
+            
+            // Now create an IPEndPoint
+            var ipEndPoint = new IPEndPoint(IPAddress.Parse(ip), int.Parse(port));
+            
+            // Connect
+            NetPeer = NetManager.Connect(ipEndPoint, "IAMASECRETKEY");
         }
 
         private void ListenerOnNetworkErrorEvent(IPEndPoint endpoint, SocketError socketerror) {
@@ -105,8 +119,25 @@ namespace Rover656.Survivors.Client {
 
         private void OnPeerConnected(NetPeer peer) {
             if (peer.Id == NetPeer.Id) {
-                // Finish queueing messages for the remote and fire them all.
-                EndNetworkEventQueue();
+                Debug.Log("Connected to remote server, sending initial data.");
+                
+                // Serialize current world state
+                var levelData = new NetDataWriter();
+                SerializeWorld(levelData);
+                
+                Debug.Log("Initial data serialized, queueing future events for sending after initialization.");
+                
+                // Immediately queue chaanges to this initial state for sending once we've established the remote world.
+                BeginNetworkEventQueue();
+
+                var initPacket = new InitGameStatePacket {
+                    RawData = levelData.CopyData()
+                };
+                
+                var writer = new NetDataWriter();
+                NetPacketProcessor.Write(writer, initPacket);
+                NetPeer?.Send(writer, DeliveryMethod.ReliableOrdered);
+                Debug.Log("Initial data sent.");
             }
         }
 
@@ -117,6 +148,8 @@ namespace Rover656.Survivors.Client {
 
         private void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo) {
             if (peer.Id == NetPeer.Id) {
+                Debug.LogWarning($"Disconnected from remote server: {disconnectInfo.Reason}.");
+                
                 // The remote has disconnected.
                 NetManager.Stop();
                 NetManager = null;

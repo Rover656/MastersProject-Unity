@@ -3384,16 +3384,16 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ui_tiles_143
+      name: copper_plate
       rect:
         serializedVersion: 2
         x: 224
         y: 0
-        width: 16
+        width: 48
         height: 16
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 7, y: 4, z: 7, w: 4}
       customData: 
       outline: []
       physicsShape: []
@@ -3401,50 +3401,6 @@ TextureImporter:
       bones: []
       spriteID: 71d1c63eaf334476d959abaa4206772b
       internalID: 1790218532
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: ui_tiles_144
-      rect:
-        serializedVersion: 2
-        x: 240
-        y: 0
-        width: 16
-        height: 16
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 23a0011cedf914c9ba6de6f00f4083c5
-      internalID: -1554062765
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: ui_tiles_145
-      rect:
-        serializedVersion: 2
-        x: 256
-        y: 0
-        width: 16
-        height: 16
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: df3eddb190e12461882dda3cabafce0c
-      internalID: 751861762
       vertices: []
       indices: 
       edges: []
@@ -3597,6 +3553,7 @@ TextureImporter:
     nameFileIdTable:
       TitleBanner: -1732657152
       blue_bar: -205413744
+      copper_plate: 1790218532
       empty_bar: -2127249509
       green_bar: -2000635414
       red_bar: -733931067
@@ -3650,7 +3607,6 @@ TextureImporter:
       ui_tiles_140: 647940215
       ui_tiles_141: 1612642497
       ui_tiles_142: 58426717
-      ui_tiles_143: 1790218532
       ui_tiles_144: -1554062765
       ui_tiles_145: 751861762
       ui_tiles_146: -903335253
