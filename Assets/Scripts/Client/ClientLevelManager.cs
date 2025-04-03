@@ -48,7 +48,7 @@ namespace Rover656.Survivors.Client {
             Vector2 joyInput = VirtualJoystick.GetAxis(11);
             if (joyInput.magnitude > 0)
             {
-                Level.Player.SetMovementVector(joyInput.normalized);
+                Level.Player.SetMovementVector(joyInput);
             }
             else
             {

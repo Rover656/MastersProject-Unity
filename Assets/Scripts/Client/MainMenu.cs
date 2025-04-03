@@ -3,11 +3,14 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 
 namespace Rover656.Survivors.Client {
     public class MainMenu : MonoBehaviour {
         public string clientGameScene = "ClientLevel";
+        public string integratedClientGameScene = "IntegratedLevel";
         public TMP_InputField remoteIPField;
+        public Toggle integratedServerToggle;
 
         private void Start()
         {
@@ -16,6 +19,11 @@ namespace Rover656.Survivors.Client {
 
         public void PlayStandard() {
             // TODO: Set any standard parameters.
+            StartLevel();
+        }
+
+        public void StartStandardBenchmark() {
+            // TODO
             StartLevel();
         }
 
@@ -31,7 +39,12 @@ namespace Rover656.Survivors.Client {
 
         private void StartLevel() {
             ClientRuntimeOptions.RemoteEndpoint = remoteIPField.text;
-            SceneManager.LoadScene(clientGameScene);
+
+            if (integratedServerToggle.isOn) {
+                SceneManager.LoadScene(integratedClientGameScene);
+            } else {
+                SceneManager.LoadScene(clientGameScene);
+            }
         }
     }
 }

@@ -465,6 +465,9 @@ namespace Rover656.Survivors.Framework {
 
             if (_updateTimeCounter > 1.0f)
             {
+                BasicPerformanceMonitor.Report(_entities.Count, _updatesThisSecond, _eventsThisSecond, _activeSystemTypes.Count, _systemRunTimeThisSecond,
+                    NetPeer?.Ping ?? 0, NetManager?.Statistics);
+                
                 // Debug.Log($"Updates this second were: {_updatesThisSecond}");
                 
                 // Computes average.
@@ -478,9 +481,6 @@ namespace Rover656.Survivors.Framework {
 
                 // Debug.Log($"Updates per second: {_updatesPerSecond}");
                 // Debug.Log($"Events per second: {_eventsPerSecond}");
-                
-                BasicPerformanceMonitor.Report(_entities.Count, _updatesPerSecond, _eventsPerSecond, _activeSystemTypes.Count, _systemRuntimePerSecond,
-                    NetPeer?.Ping ?? 0, NetManager?.Statistics);
             }
             
             if (Environment == Environment.Local) {

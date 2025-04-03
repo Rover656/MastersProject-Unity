@@ -15,17 +15,17 @@ namespace Rover656.Survivors.Framework.Metrics {
             _runIdentifier = runIdentifier + "-" + Guid.NewGuid().ToString("N");
         }
 
-        public void Report(int entityCount, int updatesPerSecond, int eventsPerSecond, int systemCount,
+        public void Report(int entityCount, int updatesThisSecond, int eventsThisSecond, int systemCount,
             float systemRunTime, int ping, NetStatistics netStatistics) {
             // TODO: Create and record metrics.
 
             _metrics.Add(new Metrics() {
                 Time = Time.time,
                 EntityCount = entityCount,
-                UpdatesPerSecond = updatesPerSecond,
-                EventsPerSecond = eventsPerSecond,
+                UpdatesThisSecond = updatesThisSecond,
+                EventsThisSecond = eventsThisSecond,
                 SystemCount = systemCount,
-                AverageSystemRunTime = systemRunTime,
+                SystemRunTime = systemRunTime,
                 RemotePeerPing = ping,
                 BytesReceived = netStatistics?.BytesReceived ?? 0,
                 BytesSent = netStatistics?.BytesSent ?? 0,
@@ -62,20 +62,20 @@ namespace Rover656.Survivors.Framework.Metrics {
 
         private string ToCsv() {
             var sb = new StringBuilder(
-                "Time,EntityCount,UpdatesPerSecond,EventsPerSecond,SystemCount,AverageSystemRunTime,RemotePeerPing,BytesReceived,BytesSent,PacketsSent,PacketsReceived,PacketLossPercent");
+                "Time,EntityCount,Frames,Events,SystemCount,SystemRunTime,RemotePeerPing,BytesReceived,BytesSent,PacketsSent,PacketsReceived,PacketLossPercent");
             foreach (var metric in _metrics) {
                 sb.Append("\n")
                     .Append(metric.Time)
                     .Append(",")
                     .Append(metric.EntityCount)
                     .Append(",")
-                    .Append(metric.UpdatesPerSecond)
+                    .Append(metric.UpdatesThisSecond)
                     .Append(",")
-                    .Append(metric.EventsPerSecond)
+                    .Append(metric.EventsThisSecond)
                     .Append(",")
                     .Append(metric.SystemCount)
                     .Append(",")
-                    .Append(metric.AverageSystemRunTime)
+                    .Append(metric.SystemRunTime)
                     .Append(",")
                     .Append(metric.RemotePeerPing)
                     .Append(",")
@@ -96,10 +96,10 @@ namespace Rover656.Survivors.Framework.Metrics {
         private class Metrics {
             public float Time { get; set; }
             public int EntityCount { get; set; }
-            public int UpdatesPerSecond { get; set; }
-            public int EventsPerSecond { get; set; }
+            public int UpdatesThisSecond { get; set; }
+            public int EventsThisSecond { get; set; }
             public int SystemCount { get; set; }
-            public float AverageSystemRunTime { get; set; }
+            public float SystemRunTime { get; set; }
             public int RemotePeerPing { get; set; }
             public long BytesReceived { get; set; }
             public long BytesSent { get; set; }
