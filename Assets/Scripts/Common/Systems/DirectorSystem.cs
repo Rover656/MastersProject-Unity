@@ -13,21 +13,22 @@ namespace Rover656.Survivors.Common.Systems {
     {
         public GameSystemType Type => SystemTypes.Director;
 
-        private const float SpawnWidth = 20;
-        private const float SpawnHeight = 15;
+        private const float SpawnWidth = 25;
+        private const float SpawnHeight = 20;
+
+        private const int MaxLevel = 5_000_000;
         
         // Doesn't matter that this is lost between remote and client that much.
         private readonly System.Random _random = new();
-
-        private readonly EntityType<Enemy>[] _enemyTypes = {
-            EntityTypes.Bat, EntityTypes.RuneWizard, 
-        };
         
         private readonly List<EnemyInfo> _enemyInfo = new()
         {
-            // TODO _00 is temp
-            new(EntityTypes.Bat, 1, 5_00, 10, 3),
-            new(EntityTypes.RuneWizard, 4, 15_00, 1, 12),
+            new(EntityTypes.Bat, 1, 25, 18, 3),
+            new(EntityTypes.RuneWizard, 4, 15_00, 4, 12),
+            new(EntityTypes.Ghost, 7, 30, 12, 8),
+            new(EntityTypes.VileGhost, 10, MaxLevel, 7, 12),
+            new(EntityTypes.Spider, 5, MaxLevel, 5, 30),
+            new(EntityTypes.ElderWizard, 7, MaxLevel, 2, 25),
         };
         
         public void Update(AbstractLevel abstractLevel, float deltaTime)
@@ -42,11 +43,12 @@ namespace Rover656.Survivors.Common.Systems {
 
             // Inflate stage level for benchmarks
             if (abstractLevel.LevelMode != LevelMode.StandardPlay) {
-                stageLevel += 20;
+                stageLevel += 20 + abstractLevel.Player.Level;
             }
             
+            stageLevel = Mathf.Max(0, stageLevel);
+            
             float spawnRate = Mathf.Max(2f - stageLevel * 0.2f, 0.75f);
-
             if (abstractLevel.EveryNSeconds(spawnRate))
             {
                 int credits = Mathf.RoundToInt(5f + 3f * (stageLevel - 1));

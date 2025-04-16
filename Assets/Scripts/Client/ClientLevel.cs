@@ -1,8 +1,11 @@
+using System;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using Rover656.Survivors.Common.Events;
+using Rover656.Survivors.Common.Items;
 using Rover656.Survivors.Common.Registries;
 using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework;
@@ -13,6 +16,7 @@ using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using Environment = Rover656.Survivors.Framework.Systems.Environment;
+using Random = UnityEngine.Random;
 
 namespace Rover656.Survivors.Client {
     public class ClientLevel : AbstractLevel {
@@ -30,6 +34,14 @@ namespace Rover656.Survivors.Client {
             
             // Spawn the player
             Player = AddNewEntity(EntityTypes.Player.Create());
+            
+            // If we're benchmarking, buff the starting player
+            if (LevelMode != LevelMode.StandardPlay) {
+                Player.LocalAddItem(new ItemStack {
+                    Item = Items.ThrowingKnives,
+                    Count = 4,
+                });
+            }
             
             // Attempt to connect to remote immediately
             ConnectToRemoteServer();
@@ -82,17 +94,33 @@ namespace Rover656.Survivors.Client {
         }
 
         protected override void OnPlayerLevelChanged(PlayerLevelUpEvent levelEvent) {
+            var availableItems = Registries.Get(SurvivorsRegistries.Items).Entries
+                .Where(e => !e.IsInternalOnly)
+                .ToList();
+            
             if (Player.Level != levelEvent.Level && LevelMode == LevelMode.StandardPlay) {
                 // Pause();
                 
                 // TODO: queue pop ups
             } else {
                 for (int i = Player.Level; i < levelEvent.Level; i++) {
-                    // TODO: Give random item
+                    var item = availableItems[Random.Range(0, availableItems.Count)];
+                    Debug.Log("Adding new item");
+                    Post(new PlayerCollectItemEvent {
+                        Stack = new ItemStack {
+                            Item = item,
+                            Count = 1,
+                        }
+                    });
                 }
             }
             
             base.OnPlayerLevelChanged(levelEvent);
+        }
+
+        protected override void OnPlayerCollectedItem(PlayerCollectItemEvent collectEvent) {
+            base.OnPlayerCollectedItem(collectEvent); 
+            _clientLevelManager?.UpdateItemsList();
         }
 
         #endregion

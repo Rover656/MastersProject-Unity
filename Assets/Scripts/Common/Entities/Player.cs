@@ -46,7 +46,8 @@ namespace Rover656.Survivors.Common.Entities
         }
 
         public int CalculateDamageTaken(int originalDamage) {
-            return Math.Max(0, originalDamage - _totalDamageResistance);
+            // No immunity, only reduce to 1 damage.
+            return Math.Max(1, originalDamage - _totalDamageResistance);
         }
 
         public void LocalAddItem(ItemStack stack) {

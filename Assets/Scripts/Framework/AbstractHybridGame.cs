@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using LiteNetLib;
 using LiteNetLib.Utils;
-using NUnit.Framework;
 using Rover656.Survivors.Framework.Entity;
 using Rover656.Survivors.Framework.EventBus;
 using Rover656.Survivors.Framework.Events;
 using Rover656.Survivors.Framework.Metrics;
 using Rover656.Survivors.Framework.Network;
 using Rover656.Survivors.Framework.Systems;
-using Unity.VisualScripting;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 using Environment = Rover656.Survivors.Framework.Systems.Environment;
@@ -92,7 +90,9 @@ namespace Rover656.Survivors.Framework {
         
         public readonly BasicPerformanceMonitor BasicPerformanceMonitor;
         protected bool EnablePerformanceMonitoring { get; set; }
-        protected virtual float PerformanceTimer => Time.time;
+        
+        private readonly float _startTime = Time.realtimeSinceStartup;
+        protected float PerformanceTimer => Time.realtimeSinceStartup - _startTime;
 
         public bool IsRunning => !IsPaused && !HasQuit;
         protected bool IsPaused { get; set; }

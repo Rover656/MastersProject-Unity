@@ -7,7 +7,7 @@ using Rover656.Survivors.Framework;
 using Rover656.Survivors.Framework.EventBus;
 
 namespace Rover656.Survivors.Common.Events {
-    public class PlayerCollectItemEvent : AbstractEvent {
+    public class PlayerCollectItemEvent : AbstractEvent, IPacketedEvent {
         public override byte Channel => 0;
         public override DeliveryMethod NetworkDeliveryMethod => DeliveryMethod.ReliableOrdered;
         
@@ -22,10 +22,9 @@ namespace Rover656.Survivors.Common.Events {
             });
         }
         
-        private class Packet : INetSerializable {
-            
-            private int ItemId { get; set; }
-            private int Count { get; set; }
+        private class Packet {
+            public int ItemId { get; set; }
+            public int Count { get; set; }
 
             public ItemStack GetStack(IHybridGameAccess game) {
                 var item = game.Registries.GetFrom(SurvivorsRegistries.Items, ItemId);
@@ -34,14 +33,15 @@ namespace Rover656.Survivors.Common.Events {
                     Count = Count,
                 };
             }
-            
-            public void Serialize(NetDataWriter writer) {
-                
-            }
+        }
 
-            public void Deserialize(NetDataReader reader) {
-                
-            }
+        public void SendPacket(IPacketSender packetSender) {
+            var packet = new Packet() {
+                ItemId = packetSender.Registries.GetIdFrom(SurvivorsRegistries.Items, Stack.Item),
+                Count = Stack.Count,
+            };
+
+            packetSender.Send(packet, NetworkDeliveryMethod, Channel);
         }
     }
 }

@@ -6,6 +6,7 @@ using Rover656.Survivors.Common.Registries;
 using Rover656.Survivors.Common.Utility;
 using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework;
+using Rover656.Survivors.Framework.Events;
 using Rover656.Survivors.Framework.Systems;
 
 namespace Rover656.Survivors.Common.Systems {
@@ -28,6 +29,8 @@ namespace Rover656.Survivors.Common.Systems {
             // Collect all damage and post after it is all collected
             // Prevents collection mutation during iteration
             Dictionary<Guid, (int, float)> pendingDamage = new();
+
+            List<Guid> destroyedDamagers = new();
 
             // Note this could be optimised, but I think it might be okay given we want to show a difference between local & remote compute?
             foreach (var damageSourceEntity in damagers) {
@@ -67,6 +70,12 @@ namespace Rover656.Survivors.Common.Systems {
                         var damageDealt = damageable.CalculateDamageTaken(damageSource.Damage);
                         if (damageDealt > 0) {
                             pendingDamage.Add(damageableEntity.Id, (damageDealt, abstractLevel.GameTime + damageable.InvincibilityDuration));
+
+                            if (abstractLevel.HasTag(damageSourceEntity, GeneralEntityTags.DamagerDestroyOnContact)) {
+                                // Destroy the damager and stop processing it.
+                                destroyedDamagers.Add(damageSourceEntity.Id);
+                                break;
+                            }
                         }
                     }
                 }
@@ -79,6 +88,11 @@ namespace Rover656.Survivors.Common.Systems {
                     Delta = pair.Value.Item1,
                     InvincibleUntil = pair.Value.Item2,
                 });
+            }
+            
+            // Destroy all the damagers that were marked for destruction.
+            foreach (var entityId in destroyedDamagers) {
+                abstractLevel.DestroyEntity(entityId);
             }
         }
     }

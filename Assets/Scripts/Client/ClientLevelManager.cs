@@ -27,6 +27,8 @@ namespace Rover656.Survivors.Client {
         // Map between entity ID and GameObject.
         private readonly Dictionary<Guid, GameObject> _gameObjects = new();
 
+        private GameObject playerInstance;
+
         private void Start()
         {
             // Copy KVP from Unity into index
@@ -42,6 +44,8 @@ namespace Rover656.Survivors.Client {
             {
                 SpawnEntity(entity);
             }
+            
+            playerInstance = _gameObjects[Level.Player.Id];
         }
 
         private Vector2 simulatedMovementVector = Vector2.zero;
@@ -160,6 +164,10 @@ namespace Rover656.Survivors.Client {
                 var damageText = Instantiate(damageParticlePrefab, entity.transform.position + Vector3.up * 0.5f, Quaternion.identity);
                 damageText.transform.GetChild(0).GetComponent<TextMeshPro>().SetText(damage.ToString());                
             }
+        }
+
+        public void UpdateItemsList() {
+            playerInstance.GetComponent<PlayerUI>().UpdateItems();
         }
     }
 }

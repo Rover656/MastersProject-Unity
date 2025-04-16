@@ -14,9 +14,7 @@ using ParticleSystem = Rover656.Survivors.Common.Systems.ParticleSystem;
 namespace Rover656.Survivors.Common.World {
     public abstract class AbstractLevel : AbstractHybridGame<AbstractLevel> {
         public virtual float GameTime { get; protected set; }
-
-        protected override float PerformanceTimer => GameTime;
-
+        
         private float _deltaTime;
 
         public override float DeltaTime => _deltaTime;
@@ -52,14 +50,14 @@ namespace Rover656.Survivors.Common.World {
             AddSystem(new DirectorSystem());
             AddSystem(new ExperienceSystem());
 
-            // Force all systems to the remote server immediately. Balancing is off so they'll remain remote.
-            if (LevelMode == LevelMode.RemoteBenchmark) {
-                ForceOffloadAll();
-            }
-
             if (LevelMode != LevelMode.StandardPlay) {
                 // Arbitrary load to pretend the game is more computationally expensive than it actually is.
                 AddSystem(new ArbitraryLoadSystem());
+            }
+
+            // Force all systems to the remote server immediately. Balancing is off so they'll remain remote.
+            if (LevelMode == LevelMode.RemoteBenchmark) {
+                ForceOffloadAll();
             }
 
             // Subscribe to game events
@@ -186,6 +184,8 @@ namespace Rover656.Survivors.Common.World {
             }
         }
 
+        private float ExperienceThreshold => LevelMode == LevelMode.StandardPlay ? 0.2f : 0.3f;
+
         protected virtual void OnEntityDied(EntityDiedEvent diedEvent) {
             // Client has authority over death actions
             if (Environment == Environment.Local) {
@@ -196,7 +196,7 @@ namespace Rover656.Survivors.Common.World {
                     // Spawn experience shards
                     var entity = GetEntity(diedEvent.EntityId);
                     if (entity is Enemy enemy) {
-                        if (enemy.GetOffset(0f, 1f) < 0.2f) {
+                        if (enemy.GetOffset(0f, 1f) < ExperienceThreshold) {
                             AddNewEntity(EntityTypes.BasicExperienceShard.Create(), enemy.Position);
                         }
                     }

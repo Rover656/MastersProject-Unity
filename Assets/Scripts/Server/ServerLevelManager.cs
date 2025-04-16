@@ -26,6 +26,9 @@ namespace Rover656.Survivors.Server {
             _netManager = new NetManager(_listener);
             _netManager.ChannelsCount = 4;
             _netManager.Start(listeningPort);
+            
+            // Force 60fps
+            Application.targetFrameRate = 60;
         }
 
         private void ListenerOnNetworkLatencyUpdateEvent(NetPeer peer, int latency)
