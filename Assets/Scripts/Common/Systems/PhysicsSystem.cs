@@ -16,13 +16,18 @@ namespace Rover656.Survivors.Common.Systems
     public class PhysicsSystem : IGameSystem<AbstractLevel>
     {
         public GameSystemType Type => SystemTypes.Physics;
+
+        private const float UpdateRate = 1 / 60f;
         
         public void Update(AbstractLevel abstractLevel, float deltaTime) {
-            if (!abstractLevel.EveryNSeconds(1 / 60f)) {
+            if (!abstractLevel.EveryNSeconds(UpdateRate)) {
                 return;
             }
 
-            deltaTime = 1 / 30f;
+            // If delta time is larger, we're lagging so let the system compensate.
+            if (deltaTime < UpdateRate) {
+                deltaTime = UpdateRate;
+            }
             
             // Fake load to try and cause a performance impact.
             // counter exists to ensure this loop has a side effect

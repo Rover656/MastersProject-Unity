@@ -10,6 +10,8 @@ using Rover656.Survivors.Framework.Entity;
 using Rover656.Survivors.Framework.Events;
 using Rover656.Survivors.Framework.Network;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
 using Environment = Rover656.Survivors.Framework.Systems.Environment;
 
 namespace Rover656.Survivors.Client {
@@ -22,7 +24,7 @@ namespace Rover656.Survivors.Client {
 
         private string _remoteEndpoint;
 
-        public ClientLevel(ClientLevelManager clientLevelManager, string remoteEndpoint) : base(null) {
+        public ClientLevel(ClientLevelManager clientLevelManager, string remoteEndpoint, LevelMode levelMode, int? maxPlayTime) : base(null, levelMode, maxPlayTime) {
             _clientLevelManager = clientLevelManager;
             _remoteEndpoint = remoteEndpoint;
             
@@ -34,7 +36,19 @@ namespace Rover656.Survivors.Client {
         }
         
         #region Unity Scene Updates
-        
+
+        protected override void OnQuit() {
+            if (LevelMode == LevelMode.StandardPlay) {
+                // TODO: Show death screen or win screen.
+            } else {
+                // Ensure benchmark results are flushed.
+                BasicPerformanceMonitor.SaveToFile();
+                
+                // Return to main menu once benchmark concludes.
+                SceneManager.LoadScene("MainMenu");
+            }
+        }
+
         // Handles entity spawn, movement and destruction.
 
         protected override void OnEntitySpawn(EntitySpawnEvent entitySpawnEvent) {
@@ -68,9 +82,17 @@ namespace Rover656.Survivors.Client {
         }
 
         protected override void OnPlayerLevelChanged(PlayerLevelUpEvent levelEvent) {
-            base.OnPlayerLevelChanged(levelEvent);
+            if (Player.Level != levelEvent.Level && LevelMode == LevelMode.StandardPlay) {
+                // Pause();
+                
+                // TODO: queue pop ups
+            } else {
+                for (int i = Player.Level; i < levelEvent.Level; i++) {
+                    // TODO: Give random item
+                }
+            }
             
-            // TODO: Pause and allow user to pick a new item.
+            base.OnPlayerLevelChanged(levelEvent);
         }
 
         #endregion
@@ -94,6 +116,11 @@ namespace Rover656.Survivors.Client {
         }
 
         private void ConnectToRemoteServer() {
+            // Do not connect to the remote server when benchmarking locally.
+            if (LevelMode == LevelMode.LocalBenchmark) {
+                return;
+            }
+            
             var listener = new EventBasedNetListener();
             listener.PeerConnectedEvent += OnPeerConnected;
             listener.NetworkReceiveEvent += OnNetworkReceived;
@@ -105,8 +132,13 @@ namespace Rover656.Survivors.Client {
             NetManager.Start();
             
             // Use _remoteEndpoint, but get the port from the end, separated by a colon.
-            var port = _remoteEndpoint.Split(':')[1];
-            var ip = _remoteEndpoint.Split(':')[0];
+            string port = null;
+            string ip = _remoteEndpoint;
+
+            if (ip.Contains(":")) {
+                port = ip.Split(':')[1];
+                ip = ip.Split(':')[0];
+            }
             
             // Default to 1337 if no port specified
             if (string.IsNullOrEmpty(port)) {
@@ -150,6 +182,12 @@ namespace Rover656.Survivors.Client {
 
         private void OnNetworkReceived(NetPeer peer, NetPacketReader reader, byte channel,
             DeliveryMethod deliveryMethod) {
+
+            // Do not accept remote input if the game is quit.
+            if (HasQuit) {
+                return;
+            }
+            
             NetPacketProcessor.ReadAllPackets(reader, this);
         }
 
@@ -162,7 +200,9 @@ namespace Rover656.Survivors.Client {
                 NetManager = null;
                 NetPeer = null;
 
-                ForceOnloadAll();
+                if (ShouldBalanceSystems) {
+                    ForceOnloadAll();
+                }
             }
         }
     }

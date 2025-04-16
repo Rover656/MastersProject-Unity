@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using LiteNetLib;
 using LiteNetLib.Utils;
+using NUnit.Framework;
 using Rover656.Survivors.Framework.Entity;
 using Rover656.Survivors.Framework.EventBus;
 using Rover656.Survivors.Framework.Events;
@@ -55,7 +56,7 @@ namespace Rover656.Survivors.Framework {
         
         protected bool IsRemoteReady { get; private set; }
         
-        protected bool HasRemotePeer => NetPeer != null && IsRemoteReady;
+        protected bool HasRemotePeer => NetPeer != null && (Environment == Environment.Remote || IsRemoteReady);
         
         public abstract float DeltaTime { get; }
         
@@ -89,9 +90,15 @@ namespace Rover656.Survivors.Framework {
         private float _systemRuntimePerSecond;
         private float _updateTimeCounter;
         
-        protected readonly BasicPerformanceMonitor BasicPerformanceMonitor;
-        
-        public bool IsPaused { get; private set; }
+        public readonly BasicPerformanceMonitor BasicPerformanceMonitor;
+        protected bool EnablePerformanceMonitoring { get; set; }
+        protected virtual float PerformanceTimer => Time.time;
+
+        public bool IsRunning => !IsPaused && !HasQuit;
+        protected bool IsPaused { get; set; }
+        protected bool HasQuit { get; set; }
+
+        protected bool ShouldBalanceSystems { get; set; } = true;
 
         protected AbstractHybridGame(IRegistryProvider registries, NetManager netManager) {
             Registries = registries;
@@ -140,6 +147,24 @@ namespace Rover656.Survivors.Framework {
 
         public void Resume() {
             Post(new GameResumeEvent());
+        }
+
+        protected void Quit() {
+            if (Environment != Environment.Local) {
+                throw new InvalidOperationException("Cannot quit game remotely!");
+            }
+
+            // Stop the local game
+            HasQuit = true;
+            
+            // If we're connected to a peer, disconnect
+            NetPeer?.Disconnect();
+            
+            // Execute OnQuit actions (like showing a death screen etc.)
+            OnQuit();
+        }
+
+        protected virtual void OnQuit() {
         }
 
         public void Send<T>(T packet, DeliveryMethod deliveryMethod, byte channel = 0) where T : class, new() {
@@ -281,6 +306,16 @@ namespace Rover656.Survivors.Framework {
             // Write paused state
             writer.Put(IsPaused);
             
+            // Write all active remote services into the packet. (Mainly for the use of the benchmark setting)
+            var inactiveSystemTypes = Registries.Get(FrameworkRegistries.GameSystemTypes).Entries
+                .Where(e => !_activeSystemTypes.Contains(e))
+                .ToList();
+            
+            writer.Put(inactiveSystemTypes.Count);
+            foreach (var systemType in inactiveSystemTypes) {
+                writer.Put(Registries.GetIdFrom(FrameworkRegistries.GameSystemTypes, systemType));
+            }
+            
             // Write all entities into the packet.
             writer.Put(_entities.Count);
             for (int i = 0; i < _entities.Count; i++) {
@@ -327,6 +362,14 @@ namespace Rover656.Survivors.Framework {
             // Load pause state
             IsPaused = reader.GetBool();
             
+            // Load all active remote systems.
+            int systemCount = reader.GetInt();
+            for (int i = 0; i < systemCount; i++) {
+                int systemTypeId = reader.GetInt();
+                var systemType = Registries.GetFrom(FrameworkRegistries.GameSystemTypes, systemTypeId);
+                _activeSystemTypes.Add(systemType);
+            }
+            
             // Spawn all entities from the remote.
             int entityCount = reader.GetInt();
             for (int i = 0; i < entityCount; i++) {
@@ -349,14 +392,15 @@ namespace Rover656.Survivors.Framework {
 
         private void TryOffloadSystem()
         {
-            if (NetManager is null || NetManager.IsRunning)
+            if (!HasRemotePeer)
             {
                 return;
             }
             
             var mostImpactfulSystemType = _activeSystemTypes
                 .Where(e => e.EnvironmentConstraint != EnvironmentConstraint.LocalOnly)
-                .OrderBy(x => x)
+                .OrderBy(x => x.EnvironmentConstraint)
+                .ThenByDescending(x => x.ImpactScore)
                 .FirstOrDefault();
 
             if (mostImpactfulSystemType != null)
@@ -373,7 +417,8 @@ namespace Rover656.Survivors.Framework {
             var leastImpactfulSystemType = Registries.Get(FrameworkRegistries.GameSystemTypes).Entries
                 .Where(e => !_activeSystemTypes.Contains(e))
                 .Where(e => e.EnvironmentConstraint != EnvironmentConstraint.LocalOnly)
-                .OrderByDescending(x => x)
+                .OrderByDescending(x => x.EnvironmentConstraint)
+                .ThenBy(x => x.ImpactScore)
                 .FirstOrDefault();
 
             if (leastImpactfulSystemType != null)
@@ -389,7 +434,20 @@ namespace Rover656.Survivors.Framework {
         {
             foreach (var type in Registries.Get(FrameworkRegistries.GameSystemTypes).Entries)
             {
+                // Don't go breaking anything :)
+                if (type.EnvironmentConstraint == EnvironmentConstraint.LocalOnly) {
+                    continue;
+                }
+                
                 SetSystemEnvironment(type, Environment.Local);
+            }
+        }
+
+        protected void ForceOffloadAll()
+        {
+            foreach (var type in Registries.Get(FrameworkRegistries.GameSystemTypes).Entries)
+            {
+                SetSystemEnvironment(type, Environment.Remote);
             }
         }
 
@@ -446,7 +504,7 @@ namespace Rover656.Survivors.Framework {
 
         public void DestroyEntity(Guid entityId)
         {
-            Post(new EntityDestroyedEvent()
+            Post(new EntityDestroyedEvent
             {
                 EntityId = entityId,
             });
@@ -465,10 +523,25 @@ namespace Rover656.Survivors.Framework {
 
             if (_updateTimeCounter > 1.0f)
             {
-                BasicPerformanceMonitor.Report(_entities.Count, _updatesThisSecond, _eventsThisSecond, _activeSystemTypes.Count, _systemRunTimeThisSecond,
-                    NetPeer?.Ping ?? 0, NetManager?.Statistics);
+                if (EnablePerformanceMonitoring) {
+                    BasicPerformanceMonitor.Report(PerformanceTimer, _entities.Count, _updatesThisSecond, _eventsThisSecond, 
+                        _activeSystemTypes.Count, _systemRunTimeThisSecond, NetPeer?.Ping ?? 0, NetManager?.Statistics);
+                }
                 
                 // Debug.Log($"Updates this second were: {_updatesThisSecond}");
+                
+                // Local makes decisions on system load
+                if (ShouldBalanceSystems && Environment == Environment.Local)
+                {
+                    if (_systemRunTimeThisSecond > 0.1f || _updatesThisSecond < Application.targetFrameRate / 2)
+                    {
+                        TryOffloadSystem();
+                    }
+                    else if (_systemRunTimeThisSecond < 0.1f && _updatesThisSecond >= Application.targetFrameRate / 4 * 3)
+                    {
+                        TryOnloadSystem();
+                    }
+                }
                 
                 // Computes average.
                 _updatesPerSecond = Mathf.FloorToInt((_updatesPerSecond + _updatesThisSecond) / (1 + _updateTimeCounter));
@@ -494,7 +567,7 @@ namespace Rover656.Survivors.Framework {
             }
 
             // Do not run systems while paused.
-            if (IsPaused) {
+            if (!IsRunning) {
                 return;
             }
             
@@ -512,20 +585,6 @@ namespace Rover656.Survivors.Framework {
             float systemRunTime = systemEndTime - systemStartTime;
 
             _systemRunTimeThisSecond += systemRunTime;
-
-            // Local makes decisions on system load
-            if (Environment == Environment.Local)
-            {
-                // TODO: REENABLE. THERE IS A PROBLEM.
-                if (systemRunTime > 0.001f)
-                {
-                    TryOffloadSystem();
-                }
-                else if (systemRunTime < 0.0000001f)
-                {
-                    TryOnloadSystem();
-                }
-            }
             
             // Debug.Log($"System execution time: {systemEndTime - systemStartTime} secs");
         }

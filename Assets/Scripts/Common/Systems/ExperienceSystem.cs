@@ -29,7 +29,7 @@ namespace Rover656.Survivors.Common.Systems {
                 }
                 
                 var distance = Vector2.Distance(abstractLevel.Player.Position, xp.Position);
-                if (distance < 5f) {
+                if (distance < 2f) {
                     collected.Add(shard);
                 }
             }

@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using Rover656.Survivors.Common.Entities;
@@ -9,7 +8,6 @@ using Rover656.Survivors.Common.Systems;
 using Rover656.Survivors.Common.Systems.EnemyMovement;
 using Rover656.Survivors.Framework;
 using UnityEngine;
-using UnityEngine.Rendering.Universal;
 using Environment = Rover656.Survivors.Framework.Systems.Environment;
 using ParticleSystem = Rover656.Survivors.Common.Systems.ParticleSystem;
 
@@ -17,13 +15,33 @@ namespace Rover656.Survivors.Common.World {
     public abstract class AbstractLevel : AbstractHybridGame<AbstractLevel> {
         public virtual float GameTime { get; protected set; }
 
+        protected override float PerformanceTimer => GameTime;
+
         private float _deltaTime;
 
         public override float DeltaTime => _deltaTime;
 
         public Player Player { get; protected set; }
 
-        protected AbstractLevel(NetManager netManager) : base(SurvivorsRegistries.Instance, netManager) {
+        // Client only property
+        public int? MaxPlayTime { get; }
+
+        private LevelMode _levelMode;
+
+        public LevelMode LevelMode {
+            get => _levelMode;
+            private set {
+                _levelMode = value;
+
+                ShouldBalanceSystems = _levelMode is not (LevelMode.LocalBenchmark or LevelMode.RemoteBenchmark);
+                EnablePerformanceMonitoring = _levelMode is not LevelMode.StandardPlay;
+            }
+        }
+
+        protected AbstractLevel(NetManager netManager, LevelMode levelMode = LevelMode.StandardPlay, int? maxPlayTime = null) : base(SurvivorsRegistries.Instance, netManager) {
+            LevelMode = levelMode;
+            MaxPlayTime = maxPlayTime;
+            
             // Register all systems.
             AddSystem(new PhysicsSystem());
             AddSystem(new DumbFollowerSystem());
@@ -34,6 +52,16 @@ namespace Rover656.Survivors.Common.World {
             AddSystem(new DirectorSystem());
             AddSystem(new ExperienceSystem());
 
+            // Force all systems to the remote server immediately. Balancing is off so they'll remain remote.
+            if (LevelMode == LevelMode.RemoteBenchmark) {
+                ForceOffloadAll();
+            }
+
+            if (LevelMode != LevelMode.StandardPlay) {
+                // Arbitrary load to pretend the game is more computationally expensive than it actually is.
+                AddSystem(new ArbitraryLoadSystem());
+            }
+
             // Subscribe to game events
             Subscribe<EntityHealthChangedEvent>(OnEntityHealthChanged, EntityHealthChangedEvent.Register);
             Subscribe<EntityDiedEvent>(OnEntityDied);
@@ -43,21 +71,24 @@ namespace Rover656.Survivors.Common.World {
         }
 
         public override void Update() {
+            if (HasQuit) {
+                return;
+            }
+            
             _deltaTime = Time.deltaTime;
             
             // Client handles time advancement.
             if (Environment == Environment.Local && !IsPaused)
             {
                 GameTime += DeltaTime;
+
+                if (GameTime > MaxPlayTime) {
+                    Quit();
+                    return;
+                }
             }
 
             base.Update();
-
-            if (EveryNSeconds(15)) {
-                BasicPerformanceMonitor.SaveToFile();
-                
-                Debug.Log($"Entity count: {Entities.Count}");
-            }
         }
 
         public bool EveryNSeconds(float seconds, float offset = 0)
@@ -107,6 +138,9 @@ namespace Rover656.Survivors.Common.World {
             // TODO: How do we sync the time once the remote is established??
             // Maybe the client should send a game time heartbeat?
             writer.Put(GameTime);
+
+            // Stupid way of sending, but works for demo.
+            writer.Put(LevelMode.ToString());
         }
 
         protected override void DeserializeAdditional(NetDataReader reader) {
@@ -116,39 +150,59 @@ namespace Rover656.Survivors.Common.World {
             Player = (Player)GetEntity(playerId);
             
             GameTime = reader.GetFloat();
+
+            string levelModeString = reader.GetString();
+            if (!Enum.TryParse<LevelMode>(levelModeString, out var levelMode)) {
+                throw new Exception($"Invalid level mode: {levelModeString}");
+            }
+
+            LevelMode = levelMode;
         }
 
         protected virtual void OnEntityHealthChanged(EntityHealthChangedEvent healthChangedEvent) {
             if (GetEntity(healthChangedEvent.EntityId) is not IDamageable damageable) return;
 
-            // Debug.Log($"Entity {healthChangedEvent.EntityId} took {healthChangedEvent.Delta} damage.");
-
-            damageable.LocalSetHealth(damageable.Health - healthChangedEvent.Delta);
-
+            // Handle immediately to prevent god spam
             if (healthChangedEvent.InvincibleUntil.HasValue) {
                 damageable.LocalSetInvincibleUntil(healthChangedEvent.InvincibleUntil.Value);
             }
 
-            if (damageable.Health <= 0) {
-                Post(new EntityDiedEvent {
-                    EntityId = healthChangedEvent.EntityId,
-                });
+            // Player is in "God" mode when we're benchmarking.
+            if (LevelMode != LevelMode.StandardPlay && healthChangedEvent.EntityId == Player.Id) {
+                return;
+            }
+
+            // Debug.Log($"Entity {healthChangedEvent.EntityId} took {healthChangedEvent.Delta} damage.");
+
+            damageable.LocalSetHealth(damageable.Health - healthChangedEvent.Delta);
+
+            // Client has authority over death
+            if (Environment == Environment.Local) {
+                if (damageable.Health <= 0) {
+                    Post(new EntityDiedEvent {
+                        EntityId = healthChangedEvent.EntityId,
+                    });
+                }
             }
         }
 
         protected virtual void OnEntityDied(EntityDiedEvent diedEvent) {
-            if (Player.Id == diedEvent.EntityId) {
-                // Debug.Log("Player died! Need to pause the game loop and show death screen etc (i.e. hand back to Unity)");
-            } else {
-                // Spawn experience shards
-                var entity = GetEntity(diedEvent.EntityId);
-                if (entity is Enemy enemy) {
-                    if (enemy.GetOffset(0f, 1f) < 0.2f) {
-                        AddNewEntity(EntityTypes.BasicExperienceShard.Create(), enemy.Position);
+            // Client has authority over death actions
+            if (Environment == Environment.Local) {
+                if (Player.Id == diedEvent.EntityId) {
+                    // Quit the game if the player dies and display the death screen.
+                    Quit();
+                } else {
+                    // Spawn experience shards
+                    var entity = GetEntity(diedEvent.EntityId);
+                    if (entity is Enemy enemy) {
+                        if (enemy.GetOffset(0f, 1f) < 0.2f) {
+                            AddNewEntity(EntityTypes.BasicExperienceShard.Create(), enemy.Position);
+                        }
                     }
-                }
                 
-                DestroyEntity(diedEvent.EntityId);
+                    DestroyEntity(diedEvent.EntityId);
+                }
             }
         }
 

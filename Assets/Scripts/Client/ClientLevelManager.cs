@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rover656.Survivors.Common;
+using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework;
 using Rover656.Survivors.Framework.Entity;
 using Terresquall;
@@ -33,7 +35,7 @@ namespace Rover656.Survivors.Client {
                 _entityPrefabMap.Add(pair.name, pair.prefab);
             }
             
-            Level = new ClientLevel(this, ClientRuntimeOptions.RemoteEndpoint);
+            Level = new ClientLevel(this, ClientRuntimeOptions.RemoteEndpoint, ClientRuntimeOptions.LevelMode, ClientRuntimeOptions.MaxPlayTime);
             
             // Add entities that were added during initialization.
             foreach (var entity in Level.Entities)
@@ -42,35 +44,65 @@ namespace Rover656.Survivors.Client {
             }
         }
 
+        private Vector2 simulatedMovementVector = Vector2.zero;
+
         private void Update() {
             // TODO: Temporary input logic for player
-            
-            Vector2 joyInput = VirtualJoystick.GetAxis(11);
-            if (joyInput.magnitude > 0)
-            {
-                Level.Player.SetMovementVector(joyInput);
-            }
-            else
-            {
-                Vector2 playerMovementVector = Vector2.zero;
-                if (Input.GetKey(KeyCode.W)) {
-                    playerMovementVector.y += 1;
-                }
 
-                if (Input.GetKey(KeyCode.S)) {
-                    playerMovementVector.y -= 1;
+            if (Level.LevelMode == LevelMode.StandardPlay) {
+                Vector2 joyInput = VirtualJoystick.GetAxis(11);
+                if (joyInput.magnitude > 0)
+                {
+                    Level.Player.SetMovementVector(joyInput);
                 }
+                else
+                {
+                    Vector2 playerMovementVector = Vector2.zero;
+                    if (Input.GetKey(KeyCode.W)) {
+                        playerMovementVector.y += 1;
+                    }
 
-                if (Input.GetKey(KeyCode.A)) {
-                    playerMovementVector.x -= 1;
+                    if (Input.GetKey(KeyCode.S)) {
+                        playerMovementVector.y -= 1;
+                    }
+
+                    if (Input.GetKey(KeyCode.A)) {
+                        playerMovementVector.x -= 1;
+                    }
+
+                    if (Input.GetKey(KeyCode.D)) {
+                        playerMovementVector.x += 1;
+                    }
+                
+                    playerMovementVector.Normalize();
+                    Level.Player.SetMovementVector(playerMovementVector);
                 }
-
-                if (Input.GetKey(KeyCode.D)) {
-                    playerMovementVector.x += 1;
+            } else {
+                if (simulatedMovementVector.magnitude < 1f || Level.EveryNSeconds(1.5f)) {
+                    bool shouldRandomMove = true;
+                    if (Level.EntitiesByTag.TryGetValue(GeneralEntityTags.Experience, out var experiencePickups)) {
+                        if (experiencePickups.Count > 0) {
+                            // Move towards the closest shard
+                            var closestShard = experiencePickups
+                                .OrderBy(e => (e.Position - Level.Player.Position).magnitude)
+                                .First();
+                            
+                            simulatedMovementVector = closestShard.Position - Level.Player.Position;
+                            simulatedMovementVector.Normalize();
+                            shouldRandomMove = false;
+                        }
+                    }
+                    
+                    // Generate random movement vector
+                    if (shouldRandomMove) {
+                        var randomX = UnityEngine.Random.Range(-1f, 1f);
+                        var randomY = UnityEngine.Random.Range(-1f, 1f);
+                        simulatedMovementVector = new Vector2(randomX, randomY);
+                        simulatedMovementVector.Normalize();
+                    }
                 }
                 
-                playerMovementVector.Normalize();
-                Level.Player.SetMovementVector(playerMovementVector);
+                Level.Player.SetMovementVector(simulatedMovementVector);
             }
             
             // Trigger level updates.

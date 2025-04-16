@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using LiteNetLib;
+using Rover656.Survivors.Common.World;
 using UnityEngine;
 
 namespace Rover656.Survivors.Server {
@@ -62,9 +63,14 @@ namespace Rover656.Survivors.Server {
 
         private void ListenerOnPeerDisconnectedEvent(NetPeer peer, DisconnectInfo disconnectinfo) {
             Debug.Log($"Peer {peer.Id} disconnected from server: {disconnectinfo.Reason}.");
-            if (!_levels.TryRemove(peer, out _))
+            if (!_levels.TryRemove(peer, out var level))
             {
                 Debug.LogError("Failed to remove level from levels dictionary.");
+            }
+
+            // If a benchmark just disconnected, ensure we save its last performance metrics
+            if (level.LevelMode != LevelMode.StandardPlay) {
+                level.BasicPerformanceMonitor.SaveToFile();
             }
         }
 

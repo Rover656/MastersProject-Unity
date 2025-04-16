@@ -15,12 +15,12 @@ namespace Rover656.Survivors.Framework.Metrics {
             _runIdentifier = runIdentifier + "-" + Guid.NewGuid().ToString("N");
         }
 
-        public void Report(int entityCount, int updatesThisSecond, int eventsThisSecond, int systemCount,
+        public void Report(float gameTime, int entityCount, int updatesThisSecond, int eventsThisSecond, int systemCount,
             float systemRunTime, int ping, NetStatistics netStatistics) {
             // TODO: Create and record metrics.
 
             _metrics.Add(new Metrics() {
-                Time = Time.time,
+                Time = gameTime,
                 EntityCount = entityCount,
                 UpdatesThisSecond = updatesThisSecond,
                 EventsThisSecond = eventsThisSecond,

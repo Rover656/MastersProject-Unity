@@ -25,8 +25,9 @@ namespace Rover656.Survivors.Common.Systems {
         
         private readonly List<EnemyInfo> _enemyInfo = new()
         {
-            new(EntityTypes.Bat, 1, 5, 10, 3),
-            new(EntityTypes.RuneWizard, 4, 15, 1, 12),
+            // TODO _00 is temp
+            new(EntityTypes.Bat, 1, 5_00, 10, 3),
+            new(EntityTypes.RuneWizard, 4, 15_00, 1, 12),
         };
         
         public void Update(AbstractLevel abstractLevel, float deltaTime)
@@ -38,6 +39,12 @@ namespace Rover656.Survivors.Common.Systems {
             }
             
             int stageLevel = 1 + Mathf.FloorToInt(abstractLevel.GameTime / 30);
+
+            // Inflate stage level for benchmarks
+            if (abstractLevel.LevelMode != LevelMode.StandardPlay) {
+                stageLevel += 20;
+            }
+            
             float spawnRate = Mathf.Max(2f - stageLevel * 0.2f, 0.75f);
 
             if (abstractLevel.EveryNSeconds(spawnRate))
