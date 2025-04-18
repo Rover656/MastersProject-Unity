@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -39,7 +40,7 @@ namespace Rover656.Survivors.Client {
             if (LevelMode != LevelMode.StandardPlay) {
                 Player.LocalAddItem(new ItemStack {
                     Item = Items.ThrowingKnives,
-                    Count = 4,
+                    Count = 2,
                 });
             }
             
@@ -56,8 +57,7 @@ namespace Rover656.Survivors.Client {
                 // Ensure benchmark results are flushed.
                 BasicPerformanceMonitor.SaveToFile();
                 
-                // Return to main menu once benchmark concludes.
-                SceneManager.LoadScene("MainMenu");
+                _clientLevelManager?.ReturnToMainMenu(2);
             }
         }
 
@@ -104,14 +104,15 @@ namespace Rover656.Survivors.Client {
                 // TODO: queue pop ups
             } else {
                 for (int i = Player.Level; i < levelEvent.Level; i++) {
-                    var item = availableItems[Random.Range(0, availableItems.Count)];
-                    Debug.Log("Adding new item");
-                    Post(new PlayerCollectItemEvent {
-                        Stack = new ItemStack {
-                            Item = item,
-                            Count = 1,
-                        }
-                    });
+                    // Making benchmarks too variant
+                    // var item = availableItems[Random.Range(0, availableItems.Count)];
+                    // Debug.Log("Adding new item");
+                    // Post(new PlayerCollectItemEvent {
+                    //     Stack = new ItemStack {
+                    //         Item = item,
+                    //         Count = 1,
+                    //     }
+                    // });
                 }
             }
             
@@ -126,6 +127,10 @@ namespace Rover656.Survivors.Client {
         #endregion
 
         public override void Update() {
+            if (HasQuit) {
+                return;
+            }
+            
             // Poll incoming messages from the remote.
             if (NetManager?.IsRunning ?? false) {
                 NetManager.PollEvents();

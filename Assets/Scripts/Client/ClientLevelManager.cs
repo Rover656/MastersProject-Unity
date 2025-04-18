@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Rover656.Survivors.Common;
@@ -8,6 +9,7 @@ using Rover656.Survivors.Framework.Entity;
 using Terresquall;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Rover656.Survivors.Client {
     public class ClientLevelManager : MonoBehaviour {
@@ -168,6 +170,19 @@ namespace Rover656.Survivors.Client {
 
         public void UpdateItemsList() {
             playerInstance.GetComponent<PlayerUI>().UpdateItems();
+        }
+
+        public void ReturnToMainMenu(int delaySeconds = 0) {
+            if (delaySeconds > 0) {
+                StartCoroutine(ReturnToMenuAfter(delaySeconds));
+            } else {
+                SceneManager.LoadScene("MainMenu");
+            }
+        }
+
+        private IEnumerator ReturnToMenuAfter(int seconds) {
+            yield return new WaitForSeconds(seconds);
+            SceneManager.LoadScene("MainMenu");
         }
     }
 }

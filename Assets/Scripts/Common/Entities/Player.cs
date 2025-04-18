@@ -96,6 +96,12 @@ namespace Rover656.Survivors.Common.Entities
             base.SerializeAdditional(writer);
             writer.Put(Health);
             writer.Put(InvincibleUntil);
+            
+            writer.Put(_inventory.Count);
+            foreach (var item in _inventory) {
+                writer.Put(SurvivorsRegistries.Instance.Get(SurvivorsRegistries.Items).GetId(item.Item));
+                writer.Put(item.Count);
+            }
         }
 
         protected override void DeserializeAdditional(NetDataReader reader)
@@ -103,6 +109,19 @@ namespace Rover656.Survivors.Common.Entities
             base.DeserializeAdditional(reader);
             Health = reader.GetInt();
             InvincibleUntil = reader.GetInt();
+
+            int itemCount = reader.GetInt();
+            _inventory.Clear();
+            for (int i = 0; i < itemCount; i++) {
+                int id = reader.GetInt();
+                int count = reader.GetInt();
+                
+                var item = SurvivorsRegistries.Instance.Get(SurvivorsRegistries.Items).Get(id);
+                _inventory.Add(new ItemStack {
+                    Item = item,
+                    Count = count,
+                });
+            }
         }
     }
 }

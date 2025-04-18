@@ -1962,7 +1962,7 @@ MonoBehaviour:
   integratedClientGameScene: IntegratedLevel
   remoteIPField: {fileID: 694147221}
   integratedServerToggle: {fileID: 2095762333}
-  benchmarkRunTime: 60
+  benchmarkRunTime: 90
 --- !u!1 &1329837111
 GameObject:
   m_ObjectHideFlags: 0

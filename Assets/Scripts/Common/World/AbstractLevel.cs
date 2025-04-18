@@ -19,6 +19,8 @@ namespace Rover656.Survivors.Common.World {
 
         public override float DeltaTime => _deltaTime;
 
+        protected override float PerformanceTimer => GameTime;
+
         public Player Player { get; protected set; }
 
         // Client only property

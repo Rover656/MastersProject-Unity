@@ -91,8 +91,7 @@ namespace Rover656.Survivors.Framework {
         public readonly BasicPerformanceMonitor BasicPerformanceMonitor;
         protected bool EnablePerformanceMonitoring { get; set; }
         
-        private readonly float _startTime = Time.realtimeSinceStartup;
-        protected float PerformanceTimer => Time.realtimeSinceStartup - _startTime;
+        protected virtual float PerformanceTimer => Time.realtimeSinceStartup;
 
         public bool IsRunning => !IsPaused && !HasQuit;
         protected bool IsPaused { get; set; }
