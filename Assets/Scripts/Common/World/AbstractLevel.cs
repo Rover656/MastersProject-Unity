@@ -52,11 +52,6 @@ namespace Rover656.Survivors.Common.World {
             AddSystem(new DirectorSystem());
             AddSystem(new ExperienceSystem());
 
-            if (LevelMode != LevelMode.StandardPlay) {
-                // Arbitrary load to pretend the game is more computationally expensive than it actually is.
-                AddSystem(new ArbitraryLoadSystem());
-            }
-
             // Force all systems to the remote server immediately. Balancing is off so they'll remain remote.
             if (LevelMode == LevelMode.RemoteBenchmark) {
                 ForceOffloadAll();

@@ -13,7 +13,6 @@ namespace Rover656.Survivors.Common.Registries
         public static GameSystemType Physics { get; } = new(EnvironmentConstraint.PreferLocal, 5);
         public static GameSystemType Weapon { get; } = new(EnvironmentConstraint.PreferLocal, 2);
         public static GameSystemType Experience { get; } = new(EnvironmentConstraint.HybridAny, 0);
-        public static GameSystemType ArbitraryLoad { get; } = new(EnvironmentConstraint.HybridAny, 100);
         
         public static void Register(Registry<GameSystemType> registry) {
             registry.Register("dumb_follower", DumbFollower);
@@ -24,7 +23,6 @@ namespace Rover656.Survivors.Common.Registries
             registry.Register("physics", Physics);
             registry.Register("weapon", Weapon);
             registry.Register("experience", Experience);
-            registry.Register("arbitrary_load", ArbitraryLoad);
         }
     }
 }
