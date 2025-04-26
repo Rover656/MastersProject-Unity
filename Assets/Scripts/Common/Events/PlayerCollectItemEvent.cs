@@ -28,7 +28,7 @@ namespace Rover656.Survivors.Common.Events {
 
             public ItemStack GetStack(IHybridGameAccess game) {
                 var item = game.Registries.GetFrom(SurvivorsRegistries.Items, ItemId);
-                return new ItemStack() {
+                return new ItemStack {
                     Item = item,
                     Count = Count,
                 };
@@ -36,7 +36,7 @@ namespace Rover656.Survivors.Common.Events {
         }
 
         public void SendPacket(IPacketSender packetSender) {
-            var packet = new Packet() {
+            var packet = new Packet {
                 ItemId = packetSender.Registries.GetIdFrom(SurvivorsRegistries.Items, Stack.Item),
                 Count = Stack.Count,
             };

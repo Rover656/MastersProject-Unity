@@ -5,8 +5,6 @@ using Rover656.Survivors.Common.Events;
 using Rover656.Survivors.Common.Registries;
 using Rover656.Survivors.Common.Utility;
 using Rover656.Survivors.Common.World;
-using Rover656.Survivors.Framework;
-using Rover656.Survivors.Framework.Events;
 using Rover656.Survivors.Framework.Systems;
 
 namespace Rover656.Survivors.Common.Systems {

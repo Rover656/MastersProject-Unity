@@ -48,8 +48,8 @@ namespace Rover656.Survivors.Common.Systems
                         continue;
                     }
                     
-                    Vector2 velocity = entity.Velocity;
-                    Vector2 proposedPosition = entity.Position + (velocity * deltaTime);
+                    var velocity = entity.Velocity;
+                    var proposedPosition = entity.Position + (velocity * deltaTime);
 
                     // Check for potential collisions with other entities
                     if (entity.CanCollide)
@@ -93,7 +93,7 @@ namespace Rover656.Survivors.Common.Systems
                 // Add all events
                 for (var j = i; j < positionChanges.Count && j < i + abstractLevel.MaxBulkPackets; j++) {
                     var change = positionChanges[j];
-                    positionChangeEvents.Add(new EntityPositionChangedEvent()
+                    positionChangeEvents.Add(new EntityPositionChangedEvent
                     {
                         EntityId = change.Item1,
                         Position = change.Item2,

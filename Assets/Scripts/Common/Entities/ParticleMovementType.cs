@@ -2,8 +2,9 @@ namespace Rover656.Survivors.Common.Entities
 {
     public enum ParticleMovementType
     {
-        Swipe,
-        Tracking,
+        // These were never implemented for the demo.
+        //Swipe,
+        //Tracking,
         AimRandomTarget,
         RandomDirection
     }

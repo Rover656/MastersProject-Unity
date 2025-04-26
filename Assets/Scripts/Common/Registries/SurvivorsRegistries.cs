@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Rover656.Survivors.Common.Items;
 using Rover656.Survivors.Framework;
 
 namespace Rover656.Survivors.Common.Registries {

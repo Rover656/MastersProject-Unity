@@ -32,7 +32,7 @@ namespace Rover656.Survivors.Framework.Entity {
 
         public Vector2 Velocity => MovementVector * MovementSpeed;
 
-        private double? _seededRandomValue = null;
+        private double? _seededRandomValue;
 
         public void SetPosition(Vector2 position) {
             // Skip unnecessary updates & thus network traffic.
@@ -41,7 +41,7 @@ namespace Rover656.Survivors.Framework.Entity {
             }
             
             // Post update event.
-            Game.Post(new EntityPositionChangedEvent() {
+            Game.Post(new EntityPositionChangedEvent {
                 EntityId = Id,
                 Position = position,
             });
@@ -52,7 +52,7 @@ namespace Rover656.Survivors.Framework.Entity {
                 return;
             }
 
-            Game.Post(new EntityMovementVectorChangedEvent() {
+            Game.Post(new EntityMovementVectorChangedEvent {
                 EntityId = Id,
                 MovementVector = movementVector,
             });
@@ -85,10 +85,8 @@ namespace Rover656.Survivors.Framework.Entity {
 
         public float GetOffset(float minInclusive, float maxInclusive) {
             // Only seed it once for performance.
-            if (_seededRandomValue == null) {
-                _seededRandomValue = new System.Random(Id.GetHashCode()).NextDouble();
-            }
-            
+            _seededRandomValue ??= new System.Random(Id.GetHashCode()).NextDouble();
+
             return (float)(_seededRandomValue * (maxInclusive - minInclusive) + minInclusive);
         }
     }

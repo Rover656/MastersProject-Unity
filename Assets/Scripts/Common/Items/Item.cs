@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
-using Rover656.Survivors.Common.Items;
 
-namespace Rover656.Survivors.Common {
+namespace Rover656.Survivors.Common.Items {
     public class Item {
         public string Description { get; }
         public bool IsInternalOnly { get; }
-        private Dictionary<object, object> _components;
+        private readonly Dictionary<object, object> _components;
 
         private Item(string description, bool isInternalOnly, Dictionary<object, object> components) {
             Description = description;
@@ -39,7 +38,7 @@ namespace Rover656.Survivors.Common {
 
         public class Factory {
             private string _description = "No Description";
-            private bool _isInternalOnly = false;
+            private bool _isInternalOnly;
             private readonly Dictionary<object, object> _components = new();
             
             public Factory SetDescription(string description) {

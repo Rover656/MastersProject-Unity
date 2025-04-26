@@ -8,8 +8,8 @@ using UnityEngine;
 
 namespace Rover656.Survivors.Framework.Metrics {
     public class BasicPerformanceMonitor {
-        private string _runIdentifier;
-        private List<Metrics> _metrics = new();
+        private readonly string _runIdentifier;
+        private readonly List<Metrics> _metrics = new();
 
         public BasicPerformanceMonitor(string runIdentifier) {
             _runIdentifier = runIdentifier + "-" + Guid.NewGuid().ToString("N");

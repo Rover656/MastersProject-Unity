@@ -1,21 +1,28 @@
 using System;
 using System.Collections.Generic;
-using Rover656.Survivors.Common;
 using Rover656.Survivors.Common.Registries;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Rover656.Survivors.Client
 {
     public class PlayerUI : MonoBehaviour {
         
-        public SlicedFilledImage PlayerHealthBar;
+        public static PlayerUI Instance { get; private set; }
+        
+        [FormerlySerializedAs("PlayerHealthBar")]
+        public SlicedFilledImage playerHealthBar;
 
-        public TextMeshProUGUI TimeText;
-        public TextMeshProUGUI LevelText;
+        [FormerlySerializedAs("TimeText")]
+        public TextMeshProUGUI timeText;
+        [FormerlySerializedAs("LevelText")]
+        public TextMeshProUGUI levelText;
 
-        public SlicedFilledImage ExperienceBar;
+        [FormerlySerializedAs("ExperienceBar")]
+        public SlicedFilledImage experienceBar;
         
         private ClientLevelManager _clientLevelManager;
         private ClientLevel Level => _clientLevelManager.Level;
@@ -23,6 +30,9 @@ namespace Rover656.Survivors.Client
         public RectTransform playerItemsGrid;
 
         public GameObject inventoryItemPrefab;
+
+        public GameObject winScreen;
+        public GameObject loseScreen;
 
         [Serializable]
         public struct NamedSprite {
@@ -35,6 +45,8 @@ namespace Rover656.Survivors.Client
         
         private void Start()
         {
+            Instance = this;
+            
             // Copy KVP from Unity into index
             foreach (var pair in itemSprites)
             {
@@ -49,16 +61,16 @@ namespace Rover656.Survivors.Client
         private void Update()
         {
             // Update healthbar width
-            PlayerHealthBar.fillAmount = Level.Player.Health / (float)Level.Player.MaxHealth;
+            playerHealthBar.fillAmount = Level.Player.Health / (float)Level.Player.MaxHealth;
 
             // TODO
-            ExperienceBar.fillAmount = Level.Player.Experience / (float)Level.Player.NextExperienceMilestone;
-            LevelText.text = $"Level {Level.Player.Level}";
+            experienceBar.fillAmount = Level.Player.Experience / (float)Level.Player.NextExperienceMilestone;
+            levelText.text = $"Level {Level.Player.Level}";
             
             // Update clock
-            int minutes = (int)(Level.GameTime / 60);
-            int secs = (int)(Level.GameTime % 60);
-            TimeText.text = $"{minutes:D2}:{secs:D2}";
+            var minutes = (int)(Level.GameTime / 60);
+            var secs = (int)(Level.GameTime % 60);
+            timeText.text = $"{minutes:D2}:{secs:D2}";
         }
 
         public void UpdateItems() {
@@ -69,7 +81,7 @@ namespace Rover656.Survivors.Client
             
             // Fill all player items
             foreach (var item in Level.Player.Inventory) {
-                string itemName = Level.Registries.GetNameFrom(SurvivorsRegistries.Items, item.Item);
+                var itemName = Level.Registries.GetNameFrom(SurvivorsRegistries.Items, item.Item);
                     
                 var itemObject = Instantiate(inventoryItemPrefab, playerItemsGrid);
                 itemObject.name = itemName;
@@ -84,6 +96,10 @@ namespace Rover656.Survivors.Client
                 
                 itemText.text = $"{item.Count}";
             }
+        }
+
+        public void ReturnToMenu() {
+            SceneManager.LoadScene("MainMenu");
         }
     }
 }

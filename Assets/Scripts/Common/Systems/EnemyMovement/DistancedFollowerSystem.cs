@@ -37,7 +37,7 @@ namespace Rover656.Survivors.Common.Systems.EnemyMovement
             var vectorChanges = new List<(Guid, Vector2)>();
             foreach (var enemy in enemies)
             {
-                var toPlayer = (player.Position - enemy.Position);
+                var toPlayer = player.Position - enemy.Position;
 
                 Vector2 vector;
                 if (toPlayer.magnitude < DistanceToMelee) {
@@ -64,7 +64,7 @@ namespace Rover656.Survivors.Common.Systems.EnemyMovement
                 // Add all events
                 for (var j = i; j < vectorChanges.Count && j < i + abstractLevel.MaxBulkPackets; j++) {
                     var change = vectorChanges[j];
-                    movementChangeEvents.Add(new EntityMovementVectorChangedEvent()
+                    movementChangeEvents.Add(new EntityMovementVectorChangedEvent
                     {
                         EntityId = change.Item1,
                         MovementVector = change.Item2,

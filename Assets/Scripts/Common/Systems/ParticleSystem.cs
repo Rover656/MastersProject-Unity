@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Rover656.Survivors.Common.Entities;
 using Rover656.Survivors.Common.Registries;
 using Rover656.Survivors.Common.World;
-using Rover656.Survivors.Framework;
 using Rover656.Survivors.Framework.Systems;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -24,7 +23,7 @@ namespace Rover656.Survivors.Common.Systems {
                 return;
             }
             
-            List<Guid> particlesToRemove = new List<Guid>();
+            var particlesToRemove = new List<Guid>();
             
             foreach (var particle in particles)
             {

@@ -1,7 +1,6 @@
 using LiteNetLib;
 using LiteNetLib.Utils;
 using Rover656.Survivors.Common.World;
-using Rover656.Survivors.Framework;
 using Rover656.Survivors.Framework.Systems;
 using UnityEngine;
 
@@ -9,11 +8,9 @@ namespace Rover656.Survivors.Server
 {
     public class ServerLevel : AbstractLevel
     {
-        public override SystemEnvironment SystemEnvironment => SystemEnvironment.Remote;
-        
         public float PeerNetworkDelay { get; set; }
-        
-        public override Environment Environment => Environment.Remote;
+
+        protected override Environment Environment => Environment.Remote;
 
         public override float DeltaTime => base.DeltaTime + PeerNetworkDelay;
 

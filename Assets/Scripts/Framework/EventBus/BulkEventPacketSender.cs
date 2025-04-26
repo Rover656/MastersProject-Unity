@@ -4,8 +4,8 @@ using LiteNetLib.Utils;
 namespace Rover656.Survivors.Framework.EventBus {
     // Proxy class for sending IPacketedEvents in bulk.
     public class BulkEventPacketSender : IPacketSender {
-        private NetPacketProcessor _netPacketProcessor;
-        private NetDataWriter _writer;
+        private readonly NetPacketProcessor _netPacketProcessor;
+        private readonly NetDataWriter _writer;
         
         public IRegistryProvider Registries { get; }
 

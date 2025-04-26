@@ -13,7 +13,7 @@ using ParticleSystem = Rover656.Survivors.Common.Systems.ParticleSystem;
 
 namespace Rover656.Survivors.Common.World {
     public abstract class AbstractLevel : AbstractHybridGame<AbstractLevel> {
-        public virtual float GameTime { get; protected set; }
+        public float GameTime { get; protected set; }
         
         private float _deltaTime;
 
@@ -22,9 +22,6 @@ namespace Rover656.Survivors.Common.World {
         protected override float PerformanceTimer => GameTime;
 
         public Player Player { get; protected set; }
-
-        // Client only property
-        public int? MaxPlayTime { get; }
 
         private LevelMode _levelMode;
 
@@ -38,9 +35,8 @@ namespace Rover656.Survivors.Common.World {
             }
         }
 
-        protected AbstractLevel(NetManager netManager, LevelMode levelMode = LevelMode.StandardPlay, int? maxPlayTime = null) : base(SurvivorsRegistries.Instance, netManager) {
+        protected AbstractLevel(NetManager netManager, LevelMode levelMode = LevelMode.StandardPlay) : base(SurvivorsRegistries.Instance, netManager) {
             LevelMode = levelMode;
-            MaxPlayTime = maxPlayTime;
             
             // Register all systems.
             AddSystem(new PhysicsSystem());
@@ -76,11 +72,6 @@ namespace Rover656.Survivors.Common.World {
             if (Environment == Environment.Local && !IsPaused)
             {
                 GameTime += DeltaTime;
-
-                if (GameTime > MaxPlayTime) {
-                    Quit();
-                    return;
-                }
             }
 
             base.Update();
@@ -104,7 +95,7 @@ namespace Rover656.Survivors.Common.World {
                 return false;
             }
 
-            float prevTime = (GameTime + offset) - DeltaTime;
+            var prevTime = GameTime + offset - DeltaTime;
 
             // Check if we crossed a multiple of `seconds`
             return Mathf.FloorToInt((GameTime + offset) / seconds) != Mathf.FloorToInt(prevTime / seconds);
@@ -119,7 +110,7 @@ namespace Rover656.Survivors.Common.World {
         protected override void DeserializeTickMeta(NetDataReader reader)
         {
             base.DeserializeTickMeta(reader);
-            float newGameTime = reader.GetFloat();
+            var newGameTime = reader.GetFloat();
             // _deltaTime = newGameTime - GameTime;
             GameTime = newGameTime;
         }
@@ -146,7 +137,7 @@ namespace Rover656.Survivors.Common.World {
             
             GameTime = reader.GetFloat();
 
-            string levelModeString = reader.GetString();
+            var levelModeString = reader.GetString();
             if (!Enum.TryParse<LevelMode>(levelModeString, out var levelMode)) {
                 throw new Exception($"Invalid level mode: {levelModeString}");
             }
@@ -185,21 +176,21 @@ namespace Rover656.Survivors.Common.World {
 
         protected virtual void OnEntityDied(EntityDiedEvent diedEvent) {
             // Client has authority over death actions
-            if (Environment == Environment.Local) {
-                if (Player.Id == diedEvent.EntityId) {
-                    // Quit the game if the player dies and display the death screen.
-                    Quit();
-                } else {
-                    // Spawn experience shards
-                    var entity = GetEntity(diedEvent.EntityId);
-                    if (entity is Enemy enemy) {
-                        if (enemy.GetOffset(0f, 1f) < ExperienceThreshold) {
-                            AddNewEntity(EntityTypes.BasicExperienceShard.Create(), enemy.Position);
-                        }
+            if (Environment != Environment.Local) return;
+            
+            if (Player.Id == diedEvent.EntityId) {
+                // Quit the game if the player dies and display the death screen.
+                Quit();
+            } else {
+                // Spawn experience shards
+                var entity = GetEntity(diedEvent.EntityId);
+                if (entity is Enemy enemy) {
+                    if (enemy.GetOffset(0f, 1f) < ExperienceThreshold) {
+                        AddNewEntity(EntityTypes.BasicExperienceShard.Create(), enemy.Position);
                     }
-                
-                    DestroyEntity(diedEvent.EntityId);
                 }
+                
+                DestroyEntity(diedEvent.EntityId);
             }
         }
 

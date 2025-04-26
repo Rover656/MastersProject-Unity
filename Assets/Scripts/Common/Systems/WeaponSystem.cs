@@ -23,12 +23,12 @@ namespace Rover656.Survivors.Common.Systems {
                         if (itemStack.Item.TryGetComponent(ItemComponents.WeaponParticle, out var particleType) &&
                             itemStack.Item.TryGetComponent(ItemComponents.WeaponDelay, out var weaponSpeedGetter)) {
                             
-                            float weaponSpeed = weaponSpeedGetter(itemStack.Count);
-                            float offset = entity.GetOffset(weaponSpeed * -0.5f, weaponSpeed * 0.5f);
+                            var weaponSpeed = weaponSpeedGetter(itemStack.Count);
+                            var offset = entity.GetOffset(weaponSpeed * -0.5f, weaponSpeed * 0.5f);
                             
                             if (abstractLevel.EveryNSeconds(weaponSpeed, offset))
                             {
-                                int count = 1;
+                                var count = 1;
                                 if (itemStack.Item.TryGetComponent(ItemComponents.ParticleCount, out var particleCountGetter))
                                 {
                                     count = particleCountGetter(itemStack.Count);
@@ -42,7 +42,7 @@ namespace Rover656.Survivors.Common.Systems {
                                 }
                         
                                 // TODO: Spread the particles somehow?
-                                for (int i = 0; i < count; i++)
+                                for (var i = 0; i < count; i++)
                                 {
                                     var particle = particleType.Create();
                                     particle.IsPlayerParticle = abstractLevel.HasTag(entity, GeneralEntityTags.Player);

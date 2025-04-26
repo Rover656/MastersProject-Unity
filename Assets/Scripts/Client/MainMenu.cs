@@ -12,6 +12,7 @@ namespace Rover656.Survivors.Client {
         public Toggle integratedServerToggle;
 
         public int benchmarkRunTime = 3 * 60; // 3 minutes
+        public int standardGameRunTime = 5 * 60; // 5 minutes
         
         private void Start()
         {
@@ -23,7 +24,7 @@ namespace Rover656.Survivors.Client {
 
         public void PlayStandard() {
             ClientRuntimeOptions.LevelMode = LevelMode.StandardPlay;
-            ClientRuntimeOptions.MaxPlayTime = null;
+            ClientRuntimeOptions.MaxPlayTime = standardGameRunTime;
             StartLevel();
         }
 
@@ -49,11 +50,9 @@ namespace Rover656.Survivors.Client {
             ClientRuntimeOptions.RemoteEndpoint = remoteIPField.text;
             ClientRuntimeOptions.RunIntegratedServer = integratedServerToggle.isOn;
 
-            if (ClientRuntimeOptions.RunIntegratedServer) {
-                SceneManager.LoadScene(integratedClientGameScene);
-            } else {
-                SceneManager.LoadScene(clientGameScene);
-            }
+            SceneManager.LoadScene(ClientRuntimeOptions.RunIntegratedServer
+                ? integratedClientGameScene
+                : clientGameScene);
         }
     }
 }

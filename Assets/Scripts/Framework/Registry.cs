@@ -35,7 +35,7 @@ namespace Rover656.Survivors.Framework {
             return _nameLookup[entry];
         }
 
-        public TEntry Register<TEntry>(String name, TEntry entry) where TEntry : T {
+        public TEntry Register<TEntry>(string name, TEntry entry) where TEntry : T {
             var id = ++_nextId;
             _entries.Add(entry);
             _byName.Add(name, entry);

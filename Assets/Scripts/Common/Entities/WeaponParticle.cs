@@ -15,7 +15,7 @@ namespace Rover656.Survivors.Common.Entities {
         public ParticleMovementType MovementType { get; }
         public override float MovementSpeed { get; }
         
-        private int Lifetime { get; set; }
+        private int Lifetime { get; }
         public float AliveUntil { get; private set; } = -1;
         
         // Assigned at generation time, can be used to make the particle act differently on nth spawn.
@@ -60,7 +60,7 @@ namespace Rover656.Survivors.Common.Entities {
             IsPlayerParticle = reader.GetBool();
             VolleyNumber = reader.GetInt();
 
-            bool hasTarget = reader.GetBool();
+            var hasTarget = reader.GetBool();
             if (hasTarget)
             {
                 TargetEntityId = reader.GetGuid();

@@ -39,7 +39,7 @@ namespace Rover656.Survivors.Common.Systems {
                 return;
             }
             
-            int stageLevel = 1 + Mathf.FloorToInt(abstractLevel.GameTime / 30);
+            var stageLevel = 1 + Mathf.FloorToInt(abstractLevel.GameTime / 30);
 
             // Inflate stage level for benchmarks
             if (abstractLevel.LevelMode != LevelMode.StandardPlay) {
@@ -48,10 +48,10 @@ namespace Rover656.Survivors.Common.Systems {
             
             stageLevel = Mathf.Max(0, stageLevel);
             
-            float spawnRate = Mathf.Max(2f - stageLevel * 0.2f, 0.75f);
+            var spawnRate = Mathf.Max(2f - stageLevel * 0.2f, 0.75f);
             if (abstractLevel.EveryNSeconds(spawnRate))
             {
-                int credits = Mathf.RoundToInt(5f + 3f * (stageLevel - 1));
+                var credits = Mathf.RoundToInt(5f + 3f * (stageLevel - 1));
 
                 // Spend credits to spawn enemies
                 while (credits > 0) {
@@ -75,9 +75,9 @@ namespace Rover656.Survivors.Common.Systems {
             if (availableEnemies.Count == 0)
                 return null;
 
-            int totalWeight = availableEnemies.Sum(e => e.Weight);
-            int roll = _random.Next(totalWeight);
-            int sum = 0;
+            var totalWeight = availableEnemies.Sum(e => e.Weight);
+            var roll = _random.Next(totalWeight);
+            var sum = 0;
 
             foreach (var enemy in availableEnemies)
             {
@@ -88,11 +88,11 @@ namespace Rover656.Survivors.Common.Systems {
             return null;
         }
 
-        private Vector2 GetEnemySpawnPosition(Vector2 playerPosition)
+        private static Vector2 GetEnemySpawnPosition(Vector2 playerPosition)
         {
-            int edge = Random.Range(0, 4); // 0 = top, 1 = bottom, 2 = left, 3 = right
-            float randomX = 0f;
-            float randomY = 0f;
+            var edge = Random.Range(0, 4); // 0 = top, 1 = bottom, 2 = left, 3 = right
+            var randomX = 0f;
+            var randomY = 0f;
 
             switch (edge)
             {

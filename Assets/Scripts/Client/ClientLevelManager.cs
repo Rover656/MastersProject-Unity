@@ -29,7 +29,7 @@ namespace Rover656.Survivors.Client {
         // Map between entity ID and GameObject.
         private readonly Dictionary<Guid, GameObject> _gameObjects = new();
 
-        private GameObject playerInstance;
+        private GameObject _playerInstance;
 
         private void Start()
         {
@@ -47,23 +47,23 @@ namespace Rover656.Survivors.Client {
                 SpawnEntity(entity);
             }
             
-            playerInstance = _gameObjects[Level.Player.Id];
+            _playerInstance = _gameObjects[Level.Player.Id];
         }
 
-        private Vector2 simulatedMovementVector = Vector2.zero;
+        private Vector2 _simulatedMovementVector = Vector2.zero;
 
         private void Update() {
             // TODO: Temporary input logic for player
 
             if (Level.LevelMode == LevelMode.StandardPlay) {
-                Vector2 joyInput = VirtualJoystick.GetAxis(11);
+                var joyInput = VirtualJoystick.GetAxis(11);
                 if (joyInput.magnitude > 0)
                 {
                     Level.Player.SetMovementVector(joyInput);
                 }
                 else
                 {
-                    Vector2 playerMovementVector = Vector2.zero;
+                    var playerMovementVector = Vector2.zero;
                     if (Input.GetKey(KeyCode.W)) {
                         playerMovementVector.y += 1;
                     }
@@ -84,8 +84,8 @@ namespace Rover656.Survivors.Client {
                     Level.Player.SetMovementVector(playerMovementVector);
                 }
             } else {
-                if (simulatedMovementVector.magnitude < 1f || Level.EveryNSeconds(1.5f)) {
-                    bool shouldRandomMove = true;
+                if (_simulatedMovementVector.magnitude < 1f || Level.EveryNSeconds(1.5f)) {
+                    var shouldRandomMove = true;
                     if (Level.EntitiesByTag.TryGetValue(GeneralEntityTags.Experience, out var experiencePickups)) {
                         if (experiencePickups.Count > 0) {
                             // Move towards the closest shard
@@ -93,8 +93,8 @@ namespace Rover656.Survivors.Client {
                                 .OrderBy(e => (e.Position - Level.Player.Position).magnitude)
                                 .First();
                             
-                            simulatedMovementVector = closestShard.Position - Level.Player.Position;
-                            simulatedMovementVector.Normalize();
+                            _simulatedMovementVector = closestShard.Position - Level.Player.Position;
+                            _simulatedMovementVector.Normalize();
                             shouldRandomMove = false;
                         }
                     }
@@ -103,12 +103,12 @@ namespace Rover656.Survivors.Client {
                     if (shouldRandomMove) {
                         var randomX = UnityEngine.Random.Range(-1f, 1f);
                         var randomY = UnityEngine.Random.Range(-1f, 1f);
-                        simulatedMovementVector = new Vector2(randomX, randomY);
-                        simulatedMovementVector.Normalize();
+                        _simulatedMovementVector = new Vector2(randomX, randomY);
+                        _simulatedMovementVector.Normalize();
                     }
                 }
                 
-                Level.Player.SetMovementVector(simulatedMovementVector);
+                Level.Player.SetMovementVector(_simulatedMovementVector);
             }
             
             // Trigger level updates.
@@ -169,7 +169,7 @@ namespace Rover656.Survivors.Client {
         }
 
         public void UpdateItemsList() {
-            playerInstance.GetComponent<PlayerUI>().UpdateItems();
+            _playerInstance.GetComponent<PlayerUI>().UpdateItems();
         }
 
         public void ReturnToMainMenu(int delaySeconds = 0) {

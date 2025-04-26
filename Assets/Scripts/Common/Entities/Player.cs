@@ -32,13 +32,13 @@ namespace Rover656.Survivors.Common.Entities
         public IEnumerable<ItemStack> Inventory => _inventory;
         
         // Cached properties
-        private int _healthIncrease = 0;
-        private int _totalDamageResistance = 0;
+        private int _healthIncrease;
+        private int _totalDamageResistance;
 
         public Player()
         {
             Health = MaxHealth;
-            _inventory.Add(new ItemStack()
+            _inventory.Add(new ItemStack
             {
                 Item = Registries.Items.ThrowingKnives,
                 Count = 1,
@@ -110,11 +110,11 @@ namespace Rover656.Survivors.Common.Entities
             Health = reader.GetInt();
             InvincibleUntil = reader.GetInt();
 
-            int itemCount = reader.GetInt();
+            var itemCount = reader.GetInt();
             _inventory.Clear();
-            for (int i = 0; i < itemCount; i++) {
-                int id = reader.GetInt();
-                int count = reader.GetInt();
+            for (var i = 0; i < itemCount; i++) {
+                var id = reader.GetInt();
+                var count = reader.GetInt();
                 
                 var item = SurvivorsRegistries.Instance.Get(SurvivorsRegistries.Items).Get(id);
                 _inventory.Add(new ItemStack {

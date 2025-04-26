@@ -3,7 +3,7 @@ using Rover656.Survivors.Framework.Systems;
 
 namespace Rover656.Survivors.Common.Registries
 {
-    public class SystemTypes
+    public static class SystemTypes
     {
         public static GameSystemType DumbFollower { get; } = new(EnvironmentConstraint.HybridAny, 1);
         public static GameSystemType DistancedFollower { get; } = new(EnvironmentConstraint.HybridAny, 1);

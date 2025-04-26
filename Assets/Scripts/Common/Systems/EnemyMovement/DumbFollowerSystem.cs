@@ -49,7 +49,7 @@ namespace Rover656.Survivors.Common.Systems.EnemyMovement
                 // Add all events
                 for (var j = i; j < vectorChanges.Count && j < i + abstractLevel.MaxBulkPackets; j++) {
                     var change = vectorChanges[j];
-                    movementChangeEvents.Add(new EntityMovementVectorChangedEvent()
+                    movementChangeEvents.Add(new EntityMovementVectorChangedEvent
                     {
                         EntityId = change.Item1,
                         MovementVector = change.Item2,

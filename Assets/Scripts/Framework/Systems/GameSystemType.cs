@@ -1,5 +1,3 @@
-using System;
-
 namespace Rover656.Survivors.Framework.Systems
 {
     public class GameSystemType

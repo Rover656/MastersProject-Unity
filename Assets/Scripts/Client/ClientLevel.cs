@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -9,29 +7,26 @@ using Rover656.Survivors.Common.Events;
 using Rover656.Survivors.Common.Items;
 using Rover656.Survivors.Common.Registries;
 using Rover656.Survivors.Common.World;
-using Rover656.Survivors.Framework;
 using Rover656.Survivors.Framework.Entity;
 using Rover656.Survivors.Framework.Events;
 using Rover656.Survivors.Framework.Network;
 using UnityEngine;
-using UnityEngine.Rendering.Universal;
-using UnityEngine.SceneManagement;
 using Environment = Rover656.Survivors.Framework.Systems.Environment;
-using Random = UnityEngine.Random;
 
 namespace Rover656.Survivors.Client {
     public class ClientLevel : AbstractLevel {
-        public override SystemEnvironment SystemEnvironment => SystemEnvironment.Local;
-
-        public override Environment Environment => Environment.Local;
+        protected override Environment Environment => Environment.Local;
 
         private readonly ClientLevelManager _clientLevelManager;
 
-        private string _remoteEndpoint;
+        private readonly string _remoteEndpoint;
 
-        public ClientLevel(ClientLevelManager clientLevelManager, string remoteEndpoint, LevelMode levelMode, int? maxPlayTime) : base(null, levelMode, maxPlayTime) {
+        private int? MaxPlayTime { get; }
+
+        public ClientLevel(ClientLevelManager clientLevelManager, string remoteEndpoint, LevelMode levelMode, int? maxPlayTime = null) : base(null, levelMode) {
             _clientLevelManager = clientLevelManager;
             _remoteEndpoint = remoteEndpoint;
+            MaxPlayTime = maxPlayTime;
             
             // Spawn the player
             Player = AddNewEntity(EntityTypes.Player.Create());
@@ -52,11 +47,14 @@ namespace Rover656.Survivors.Client {
 
         protected override void OnQuit() {
             if (LevelMode == LevelMode.StandardPlay) {
-                // TODO: Show death screen or win screen.
+                if (Player.Health > 0) {
+                    PlayerUI.Instance.winScreen.SetActive(true);
+                } else {
+                    PlayerUI.Instance.loseScreen.SetActive(true);
+                }
             } else {
                 // Ensure benchmark results are flushed.
                 BasicPerformanceMonitor.SaveToFile();
-                
                 _clientLevelManager?.ReturnToMainMenu(2);
             }
         }
@@ -103,17 +101,17 @@ namespace Rover656.Survivors.Client {
                 
                 // TODO: queue pop ups
             } else {
-                for (int i = Player.Level; i < levelEvent.Level; i++) {
-                    // Making benchmarks too variant
-                    // var item = availableItems[Random.Range(0, availableItems.Count)];
-                    // Debug.Log("Adding new item");
-                    // Post(new PlayerCollectItemEvent {
-                    //     Stack = new ItemStack {
-                    //         Item = item,
-                    //         Count = 1,
-                    //     }
-                    // });
-                }
+                // Giving the benchmark game items would introduce too much variance in the performance requirements.
+                // for (var i = Player.Level; i < levelEvent.Level; i++) {
+                //     var item = availableItems[Random.Range(0, availableItems.Count)];
+                //     Debug.Log("Adding new item");
+                //     Post(new PlayerCollectItemEvent {
+                //         Stack = new ItemStack {
+                //             Item = item,
+                //             Count = 1,
+                //         }
+                //     });
+                // }
             }
             
             base.OnPlayerLevelChanged(levelEvent);
@@ -128,6 +126,11 @@ namespace Rover656.Survivors.Client {
 
         public override void Update() {
             if (HasQuit) {
+                return;
+            }
+            
+            if (GameTime > MaxPlayTime) {
+                Quit();
                 return;
             }
             

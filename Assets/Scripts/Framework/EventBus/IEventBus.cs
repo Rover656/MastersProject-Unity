@@ -7,7 +7,7 @@ namespace Rover656.Survivors.Framework.EventBus {
         public int MaxBulkPackets { get; }
         
         /**
-         * Throws IllegalArgumentException if messages.Count < 1 or > MaxBulkPackets.
+         * Throws IllegalArgumentException if messages.Count &lt; 1 or &gt; MaxBulkPackets.
          */
         void PostMany<T>(IList<T> messages) where T : AbstractEvent, new();
     }

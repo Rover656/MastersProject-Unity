@@ -18,12 +18,10 @@ namespace Rover656.Survivors.Framework {
     /// Fundamentals for a hybrid-compute game.
     /// </summary>
     public abstract class AbstractHybridGame<TGame> : IHybridGameAccess, IPacketSender where TGame : AbstractHybridGame<TGame> {
-        public abstract SystemEnvironment SystemEnvironment { get; }
-        
         // TODO: When connecting ensure the registries match.
         public IRegistryProvider Registries { get; }
 
-        public abstract Environment Environment { get; }
+        protected abstract Environment Environment { get; }
 
         private NetManager _netManager;
 
@@ -76,8 +74,8 @@ namespace Rover656.Survivors.Framework {
         public Dictionary<int, List<AbstractEntity>> EntitiesByPhysicsLayer { get; } = new();
 
         private bool _shouldQueueEvents;
-        private Queue<Action> _queuedEvents = new();
-        private object _queuedEventsLock = new();
+        private readonly Queue<Action> _queuedEvents = new();
+        private readonly object _queuedEventsLock = new();
         
         // Performance metrics
         private int _updatesPerSecond;
@@ -93,9 +91,9 @@ namespace Rover656.Survivors.Framework {
         
         protected virtual float PerformanceTimer => Time.realtimeSinceStartup;
 
-        public bool IsRunning => !IsPaused && !HasQuit;
-        protected bool IsPaused { get; set; }
-        protected bool HasQuit { get; set; }
+        protected bool IsRunning => !IsPaused && !HasQuit;
+        protected bool IsPaused { get; private set; }
+        protected bool HasQuit { get; private set; }
 
         protected bool ShouldBalanceSystems { get; set; } = true;
 
@@ -113,7 +111,7 @@ namespace Rover656.Survivors.Framework {
                     writer.Put(value.x);
                     writer.Put(value.y);
                 },
-                (reader) => {
+                reader => {
                     var x = reader.GetFloat();
                     var y = reader.GetFloat();
                     return new Vector2(x, y);
@@ -206,7 +204,7 @@ namespace Rover656.Survivors.Framework {
                 throw new ArgumentException($"Message count must be between 1 and {MaxBulkPackets}!");
             }
             
-            bool shouldBuildBundle = NetManager?.IsRunning ?? false || _shouldQueueEvents;
+            var shouldBuildBundle = NetManager?.IsRunning ?? _shouldQueueEvents;
 
             var bundleWriter = shouldBuildBundle ? new NetDataWriter() : null;
             var bulkSender = shouldBuildBundle ? new BulkEventPacketSender(NetPacketProcessor, bundleWriter, Registries) : null;
@@ -301,7 +299,7 @@ namespace Rover656.Survivors.Framework {
         
         #region Spawn Remote Game
 
-        public void SerializeWorld(NetDataWriter writer) {
+        protected void SerializeWorld(NetDataWriter writer) {
             // Write paused state
             writer.Put(IsPaused);
             
@@ -317,9 +315,9 @@ namespace Rover656.Survivors.Framework {
             
             // Write all entities into the packet.
             writer.Put(_entities.Count);
-            for (int i = 0; i < _entities.Count; i++) {
-                writer.Put(Registries.GetIdFrom(FrameworkRegistries.EntityTypes, _entities[i].Type));
-                _entities[i].Serialize(writer);
+            foreach (var entity in _entities) {
+                writer.Put(Registries.GetIdFrom(FrameworkRegistries.EntityTypes, entity.Type));
+                entity.Serialize(writer);
             }
             
             SerializeAdditional(writer);
@@ -357,22 +355,22 @@ namespace Rover656.Survivors.Framework {
             IsRemoteReady = true;
         }
 
-        public void DeserializeWorld(NetDataReader reader) {
+        protected void DeserializeWorld(NetDataReader reader) {
             // Load pause state
             IsPaused = reader.GetBool();
             
             // Load all active remote systems.
-            int systemCount = reader.GetInt();
-            for (int i = 0; i < systemCount; i++) {
-                int systemTypeId = reader.GetInt();
+            var systemCount = reader.GetInt();
+            for (var i = 0; i < systemCount; i++) {
+                var systemTypeId = reader.GetInt();
                 var systemType = Registries.GetFrom(FrameworkRegistries.GameSystemTypes, systemTypeId);
                 _activeSystemTypes.Add(systemType);
             }
             
             // Spawn all entities from the remote.
-            int entityCount = reader.GetInt();
-            for (int i = 0; i < entityCount; i++) {
-                int entityTypeId = reader.GetInt();
+            var entityCount = reader.GetInt();
+            for (var i = 0; i < entityCount; i++) {
+                var entityTypeId = reader.GetInt();
                 var entityType = Registries.GetFrom(FrameworkRegistries.EntityTypes, entityTypeId);
                 OnEntitySpawn(new EntitySpawnEvent() {
                     Entity = entityType.FromNetwork(reader),
@@ -404,7 +402,7 @@ namespace Rover656.Survivors.Framework {
 
             if (mostImpactfulSystemType != null)
             {
-                string name = Registries.GetNameFrom(FrameworkRegistries.GameSystemTypes, mostImpactfulSystemType);
+                var name = Registries.GetNameFrom(FrameworkRegistries.GameSystemTypes, mostImpactfulSystemType);
                 Debug.Log($"Game system {name} has been offloaded.");
                 
                 SetSystemEnvironment(mostImpactfulSystemType, Environment.Remote);
@@ -422,7 +420,7 @@ namespace Rover656.Survivors.Framework {
 
             if (leastImpactfulSystemType != null)
             {
-                string name = Registries.GetNameFrom(FrameworkRegistries.GameSystemTypes, leastImpactfulSystemType);
+                var name = Registries.GetNameFrom(FrameworkRegistries.GameSystemTypes, leastImpactfulSystemType);
                 Debug.Log($"Game system {name} has been onloaded.");
                 
                 SetSystemEnvironment(leastImpactfulSystemType, Environment.Local);
@@ -479,15 +477,11 @@ namespace Rover656.Survivors.Framework {
         
         #endregion
 
-        public AbstractEntity GetEntity(Guid entityId) {
-            if (!_entitiesById.ContainsKey(entityId)) {
-                return null;
-            }
-            
-            return _entitiesById[entityId];
+        protected AbstractEntity GetEntity(Guid entityId) {
+            return _entitiesById.GetValueOrDefault(entityId);
         }
 
-        public T AddNewEntity<T>(T entity) where T : AbstractEntity
+        protected T AddNewEntity<T>(T entity) where T : AbstractEntity
         {
             return AddNewEntity(entity, Vector2.zero);
         }
@@ -495,7 +489,7 @@ namespace Rover656.Survivors.Framework {
         public T AddNewEntity<T>(T entity, Vector2 position) where T : AbstractEntity
         {
             entity.Position = position;
-            Post(new EntitySpawnEvent() {
+            Post(new EntitySpawnEvent {
                 Entity = entity,
             });
             return entity;
@@ -571,7 +565,7 @@ namespace Rover656.Survivors.Framework {
             }
             
             // Update all systems.
-            float systemStartTime = Time.realtimeSinceStartup;
+            var systemStartTime = Time.realtimeSinceStartup;
             foreach (var systemType in _activeSystemTypes)
             {
                 if (_systems.TryGetValue(systemType, out var system))
@@ -580,8 +574,8 @@ namespace Rover656.Survivors.Framework {
                 }
             }
 
-            float systemEndTime = Time.realtimeSinceStartup;
-            float systemRunTime = systemEndTime - systemStartTime;
+            var systemEndTime = Time.realtimeSinceStartup;
+            var systemRunTime = systemEndTime - systemStartTime;
 
             _systemRunTimeThisSecond += systemRunTime;
             
@@ -602,7 +596,7 @@ namespace Rover656.Survivors.Framework {
 
         #region Network handlers
 
-        protected void Handle(GameTickEvent tickEvent)
+        private void Handle(GameTickEvent tickEvent)
         {
             // Only the remote receives tick metadata.
             if (Environment == Environment.Remote)
@@ -650,7 +644,7 @@ namespace Rover656.Survivors.Framework {
             spawnEvent.Entity.Game = this;
         }
 
-        protected void OnEntityMovementVectorChanged(EntityMovementVectorChangedEvent changedEvent) {
+        private void OnEntityMovementVectorChanged(EntityMovementVectorChangedEvent changedEvent) {
             if (!_entitiesById.TryGetValue(changedEvent.EntityId, out var entity)) {
                 Debug.LogWarning($"Received movement vector change for non-existent entity {changedEvent.EntityId} on {Environment}.");
                 return;
@@ -663,7 +657,7 @@ namespace Rover656.Survivors.Framework {
             entity.MovementVector = movementVector;
         }
 
-        protected void OnEntityPositionChanged(EntityPositionChangedEvent changedEvent) {
+        private void OnEntityPositionChanged(EntityPositionChangedEvent changedEvent) {
             if (!_entitiesById.TryGetValue(changedEvent.EntityId, out var entity)) {
                 Debug.LogWarning($"Received position change for non-existent entity {changedEvent.EntityId} on {Environment}.");
                 return;
@@ -672,7 +666,6 @@ namespace Rover656.Survivors.Framework {
             OnEntityPositionChanged(entity, changedEvent.Position);
         }
 
-        // TODO: Could be another sub-packet?
         protected virtual void OnEntityPositionChanged(AbstractEntity entity, Vector2 position) {
             entity.Position = position;
         }
@@ -732,11 +725,10 @@ namespace Rover656.Survivors.Framework {
             //FNV-1 64 bit hash
             static HashCache()
             {
-                ulong hash = 14695981039346656037UL; //offset
-                string typeName = typeof(T).ToString();
-                for (var i = 0; i < typeName.Length; i++)
-                {
-                    hash ^= typeName[i];
+                var hash = 14695981039346656037UL; //offset
+                var typeName = typeof(T).ToString();
+                foreach (var character in typeName) {
+                    hash ^= character;
                     hash *= 1099511628211UL; //prime
                 }
                 Id = hash;

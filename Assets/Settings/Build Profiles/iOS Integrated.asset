@@ -829,6 +829,8 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
     - rid: 3689855535098626048
       type: {class: iOSPlatformSettings, ns: UnityEditor.iOS, asm: UnityEditor.iOS.Extensions}
       data:

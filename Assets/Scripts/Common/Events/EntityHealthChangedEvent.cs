@@ -18,7 +18,7 @@ namespace Rover656.Survivors.Common.Events
         public static void Register(NetPacketProcessor netPacketProcessor, Action<EntityHealthChangedEvent> handler) {
             // Use the underlying packet for transport.
             EntityHealthChangedEvent reference;
-            netPacketProcessor.SubscribeReusable<Packet, IHybridGameAccess>((p, game) => {
+            netPacketProcessor.SubscribeReusable<Packet, IHybridGameAccess>((p, _) => {
                 reference = p.FormEvent();
                 handler(reference);
             });
