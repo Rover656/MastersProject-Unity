@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Rover656.Survivors.Common;
+using Rover656.Survivors.Common.Items;
 using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework;
 using Rover656.Survivors.Framework.Entity;
@@ -183,6 +184,10 @@ namespace Rover656.Survivors.Client {
         private IEnumerator ReturnToMenuAfter(int seconds) {
             yield return new WaitForSeconds(seconds);
             SceneManager.LoadScene("MainMenu");
+        }
+        
+        public void QueueItemChoices(Item item1, Item item2) {
+            PlayerUI.Instance.QueueItemChoices(item1, item2);
         }
     }
 }

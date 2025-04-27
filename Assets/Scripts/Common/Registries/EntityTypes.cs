@@ -5,28 +5,28 @@ using Rover656.Survivors.Framework.Entity;
 
 namespace Rover656.Survivors.Common.Registries {
     public static class EntityTypes {
-        public static EntityType<ExperienceShard> BasicExperienceShard { get; } = new(() => new ExperienceShard(1), GeneralEntityTags.Experience);
-
+        public static EntityType<ExperienceShard> BasicExperienceShard { get; } = new(() => new ExperienceShard(5), GeneralEntityTags.Experience);
+        
         public static EntityType<Player> Player { get; } =
             new(() => new Player(), GeneralEntityTags.Player, GeneralEntityTags.Damageable, GeneralEntityTags.Inventory);
 
-        public static EntityType<Enemy> Bat { get; } = new(() => new Enemy(Bat, 4f, 2, 2, true, new()),
+        public static EntityType<Enemy> Bat { get; } = new(() => new Enemy(Bat, 4f, 2, 2, true, 1, new()),
             GeneralEntityTags.Enemy,
             EnemyMovementTag.DumbFollower, GeneralEntityTags.Damager, GeneralEntityTags.Damageable, GeneralEntityTags.Inventory);
         
-        public static EntityType<Enemy> Ghost { get; } = new(() => new Enemy(Ghost, 5f, 2, 4, true, new()),
+        public static EntityType<Enemy> Ghost { get; } = new(() => new Enemy(Ghost, 5f, 2, 4, true, 3, new()),
             GeneralEntityTags.Enemy,
             EnemyMovementTag.DumbFollower, GeneralEntityTags.Damager, GeneralEntityTags.Damageable, GeneralEntityTags.Inventory);
         
-        public static EntityType<Enemy> VileGhost { get; } = new(() => new Enemy(VileGhost, 6f, 8, 6, true, new()),
+        public static EntityType<Enemy> VileGhost { get; } = new(() => new Enemy(VileGhost, 6f, 8, 6, true, 5, new()),
             GeneralEntityTags.Enemy,
             EnemyMovementTag.DumbFollower, GeneralEntityTags.Damager, GeneralEntityTags.Damageable, GeneralEntityTags.Inventory);
         
-        public static EntityType<Enemy> Spider { get; } = new(() => new Enemy(Spider, 8f, 8, 5, false, new()),
+        public static EntityType<Enemy> Spider { get; } = new(() => new Enemy(Spider, 8f, 8, 5, false, 5, new()),
             GeneralEntityTags.Enemy,
             EnemyMovementTag.DumbFollower, GeneralEntityTags.Damager, GeneralEntityTags.Damageable, GeneralEntityTags.Inventory);
 
-        public static EntityType<Enemy> RuneWizard { get; } = new(() => new Enemy(RuneWizard, 1f, 8, 3, false, new() {
+        public static EntityType<Enemy> RuneWizard { get; } = new(() => new Enemy(RuneWizard, 1f, 8, 3, false, 7, new() {
                 new ItemStack {
                     Item = Items.MagicStaff,
                     Count = 1,
@@ -34,7 +34,7 @@ namespace Rover656.Survivors.Common.Registries {
             }), GeneralEntityTags.Enemy,
             EnemyMovementTag.DistancedFollower, GeneralEntityTags.Damager, GeneralEntityTags.Damageable, GeneralEntityTags.Inventory);
 
-        public static EntityType<Enemy> ElderWizard { get; } = new(() => new Enemy(ElderWizard, 0.5f, 12, 5, false, new() {
+        public static EntityType<Enemy> ElderWizard { get; } = new(() => new Enemy(ElderWizard, 0.5f, 12, 5, false, 10, new() {
                 new ItemStack {
                     Item = Items.MagicStaff,
                     Count = 2,

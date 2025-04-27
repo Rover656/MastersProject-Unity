@@ -97,9 +97,14 @@ namespace Rover656.Survivors.Client {
                 .ToList();
             
             if (Player.Level != levelEvent.Level && LevelMode == LevelMode.StandardPlay) {
-                // Pause();
-                
-                // TODO: queue pop ups
+                Pause();
+
+                // Enqueue all random choices for each level up.
+                for (var i = Player.Level; i < levelEvent.Level; i++) {
+                    var option1 = availableItems[Random.Range(0, availableItems.Count)];
+                    var option2 = availableItems[Random.Range(0, availableItems.Count)];
+                    _clientLevelManager?.QueueItemChoices(option1, option2);
+                }
             } else {
                 // Giving the benchmark game items would introduce too much variance in the performance requirements.
                 // for (var i = Player.Level; i < levelEvent.Level; i++) {
@@ -120,6 +125,31 @@ namespace Rover656.Survivors.Client {
         protected override void OnPlayerCollectedItem(PlayerCollectItemEvent collectEvent) {
             base.OnPlayerCollectedItem(collectEvent); 
             _clientLevelManager?.UpdateItemsList();
+        }
+
+        protected override void OnPlayerExperienceChanged(PlayerExperienceEvent experienceEvent) {
+            base.OnPlayerExperienceChanged(experienceEvent);
+
+            // Handle player level up
+            if (Player.Experience >= Player.NextExperienceMilestone) {
+                var level = Player.Level;
+                var nextMilestone = Player.NextExperienceMilestone;
+                var experience = Player.Experience;
+                while (experience >= nextMilestone) {
+                    level++;
+                    experience -= nextMilestone;
+                    nextMilestone = Mathf.FloorToInt(nextMilestone * 1.25f);
+                }
+                
+                Post(new PlayerExperienceEvent {
+                    ExperienceDelta = experience - Player.Experience,
+                });
+                
+                Post(new PlayerLevelUpEvent {
+                    Level = level,
+                    NextExperienceMilestone = nextMilestone,
+                });
+            }
         }
 
         #endregion

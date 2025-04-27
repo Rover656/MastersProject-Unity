@@ -38,30 +38,15 @@ namespace Rover656.Survivors.Common.Systems {
                 return;
             }
 
-            var experience = player.Experience;
+            var experience = 0;
             foreach (var shard in collected) {
                 experience += shard.Value;
                 abstractLevel.DestroyEntity(shard.Id);
             }
 
-            var level = player.Level;
-            var nextMilestone = player.NextExperienceMilestone;
-            while (experience >= nextMilestone) {
-                level++;
-                experience -= nextMilestone;
-                nextMilestone = Mathf.FloorToInt(nextMilestone * 1.25f);
-            }
-            
             abstractLevel.Post(new PlayerExperienceEvent {
-                Experience = experience,
+                ExperienceDelta = experience,
             });
-
-            if (level != player.Level) {
-                abstractLevel.Post(new PlayerLevelUpEvent {
-                    Level = level,
-                    NextExperienceMilestone = nextMilestone,
-                });
-            }
         }
     }
 }

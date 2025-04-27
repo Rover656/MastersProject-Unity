@@ -6,17 +6,21 @@ using Rover656.Survivors.Framework.Entity;
 
 namespace Rover656.Survivors.Common.Entities {
     public class Enemy : AbstractEntity, IDamageable, IDamageSource, IEntityInventory {
-        public Enemy(IEntityType type, float movementSpeed, int maxHealth, int damage, bool isFlying,
+        public Enemy(IEntityType type, float movementSpeed, int maxHealth, int damage, bool isFlying, int killExperience,
             List<ItemStack> inventory) {
             Type = type;
             MovementSpeed = movementSpeed;
-            MaxHealth = maxHealth;
+            _baseHealth = maxHealth;
             Health = MaxHealth;
-            Damage = damage;
+            _baseDamage = damage;
             IsFlying = isFlying;
+            KillExperience = killExperience;
             
             Inventory = inventory;
         }
+
+        private int _baseHealth;
+        private int _baseDamage;
         
         public IEnumerable<ItemStack> Inventory { get; }
 
@@ -33,10 +37,15 @@ namespace Rover656.Survivors.Common.Entities {
         public float InvincibilityDuration => 0.25f;
         public float InvincibleUntil { get; private set; }
 
-        public int MaxHealth { get; }
+        public int MaxHealth => _baseHealth * DifficultyMultiplier;
 
         public int DamagesPhysicsLayer => CollisionLayers.Player;
-        public int Damage { get; }
+        public int Damage => _baseDamage * DifficultyMultiplier;
+        
+        public int KillExperience { get; }
+
+        // Set before spawn or don't edit.
+        public int DifficultyMultiplier { get; set; } = 1;
 
         public void LocalSetHealth(int health) {
             Health = health;
@@ -50,12 +59,14 @@ namespace Rover656.Survivors.Common.Entities {
             base.SerializeAdditional(writer);
             writer.Put(Health);
             writer.Put(InvincibleUntil);
+            writer.Put(DifficultyMultiplier);
         }
 
         protected override void DeserializeAdditional(NetDataReader reader) {
             base.DeserializeAdditional(reader);
             Health = reader.GetInt();
             InvincibleUntil = reader.GetInt();
+            DifficultyMultiplier = reader.GetInt();
         }
     }
 }

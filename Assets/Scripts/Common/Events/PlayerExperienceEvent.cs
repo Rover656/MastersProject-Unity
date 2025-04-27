@@ -6,6 +6,6 @@ namespace Rover656.Survivors.Common.Events {
         public override byte Channel => 0;
         public override DeliveryMethod NetworkDeliveryMethod => DeliveryMethod.ReliableOrdered;
         
-        public int Experience { get; set; }
+        public int ExperienceDelta { get; set; }
     }
 }

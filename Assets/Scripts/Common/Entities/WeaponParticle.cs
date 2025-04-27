@@ -4,7 +4,6 @@ using Rover656.Survivors.Common.World;
 using Rover656.Survivors.Framework.Entity;
 
 namespace Rover656.Survivors.Common.Entities {
-    // TODO: Support for a particle that dies after contact?
     public class WeaponParticle : AbstractEntity, IDamageSource {
         public override IEntityType Type { get; }
         public override bool CanCollide => false;

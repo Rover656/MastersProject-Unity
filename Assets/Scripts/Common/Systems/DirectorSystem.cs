@@ -16,17 +16,28 @@ namespace Rover656.Survivors.Common.Systems {
         private const float SpawnWidth = 25;
         private const float SpawnHeight = 20;
 
-        private const int MaxLevel = 5_000_000;
+        private const int BenchMaxLevel = 5_000_000;
+        private const int MaxLevel = 5 * 60 / 20; // based on 5 mins to win.
         
         // Doesn't matter that this is lost between remote and client that much.
         private readonly System.Random _random = new();
         
-        private readonly List<EnemyInfo> _enemyInfo = new()
+        private readonly List<EnemyInfo> _benchmarkEnemyInfo = new()
         {
             new(EntityTypes.Bat, 1, 25, 18, 3),
-            new(EntityTypes.RuneWizard, 4, 15_00, 4, 12),
+            new(EntityTypes.RuneWizard, 4, 25, 4, 12),
             new(EntityTypes.Ghost, 7, 30, 12, 8),
-            new(EntityTypes.VileGhost, 10, MaxLevel, 7, 12),
+            new(EntityTypes.VileGhost, 10, BenchMaxLevel, 7, 12),
+            new(EntityTypes.Spider, 5, BenchMaxLevel, 5, 30),
+            new(EntityTypes.ElderWizard, 7, BenchMaxLevel, 2, 25),
+        };
+        
+        private readonly List<EnemyInfo> _enemyInfo = new()
+        {
+            new(EntityTypes.Bat, 1, 8, 18, 3),
+            new(EntityTypes.RuneWizard, 4, 10, 4, 12),
+            new(EntityTypes.Ghost, 7, 10, 12, 8),
+            new(EntityTypes.VileGhost, 9, MaxLevel, 7, 12),
             new(EntityTypes.Spider, 5, MaxLevel, 5, 30),
             new(EntityTypes.ElderWizard, 7, MaxLevel, 2, 25),
         };
@@ -38,17 +49,27 @@ namespace Rover656.Survivors.Common.Systems {
             {
                 return;
             }
+
+            // Some settings were changed since benchmark results were taken.
+            // To keep it level, the director behaves differently in standard play.
+            // This was done to improve "fun" during demo.
+            var isBenchmark = abstractLevel.LevelMode != LevelMode.StandardPlay;
             
-            var stageLevel = 1 + Mathf.FloorToInt(abstractLevel.GameTime / 30);
+            float stageLevelIncreaseRate = isBenchmark ? 30 : 20;
+            var stageLevel = 1 + Mathf.FloorToInt(abstractLevel.GameTime / stageLevelIncreaseRate);
 
             // Inflate stage level for benchmarks
-            if (abstractLevel.LevelMode != LevelMode.StandardPlay) {
+            var enemyDifficultyModifier = 1;
+            if (!isBenchmark) {
+                // Only increase enemy stats in standard play, cap at 10x difficulty
+                enemyDifficultyModifier = Mathf.Min(10, Mathf.FloorToInt(Mathf.Exp(0.1f * stageLevel)));
+            } else {
                 stageLevel += 20 + abstractLevel.Player.Level;
             }
-            
+
             stageLevel = Mathf.Max(0, stageLevel);
             
-            var spawnRate = Mathf.Max(2f - stageLevel * 0.2f, 0.75f);
+            var spawnRate = Mathf.Max(2f - stageLevel * 0.2f, isBenchmark ? 0.75f : 0.3f);
             if (abstractLevel.EveryNSeconds(spawnRate))
             {
                 var credits = Mathf.RoundToInt(5f + 3f * (stageLevel - 1));
@@ -56,22 +77,25 @@ namespace Rover656.Survivors.Common.Systems {
                 // Spend credits to spawn enemies
                 while (credits > 0) {
                     // Attempt to pick an enemy
-                    var enemy = PickEnemy(stageLevel, credits);
+                    var enemy = PickEnemy(stageLevel, credits, isBenchmark);
                     if (enemy is null) {
                         break;
                     }
                     
                     // Spawn the enemy and deduct its cost
-                    abstractLevel.AddNewEntity(enemy.EntityType.Create(), GetEnemySpawnPosition(player.Position));
+                    var enemyEntity = enemy.EntityType.Create();
+                    enemyEntity.DifficultyMultiplier = enemyDifficultyModifier;
+                    abstractLevel.AddNewEntity(enemyEntity, GetEnemySpawnPosition(player.Position));
                     credits -= enemy.Cost;
                 }
             }
         }
         
         [CanBeNull]
-        private EnemyInfo PickEnemy(int level, int remainingBalance)
+        private EnemyInfo PickEnemy(int level, int remainingBalance, bool isBenchmark)
         {
-            var availableEnemies = _enemyInfo.Where(e => level >= e.MinLevel && level <= e.MaxLevel && e.Cost <= remainingBalance).ToList();
+            var availableEnemies = (isBenchmark ? _benchmarkEnemyInfo : _enemyInfo)
+                .Where(e => level >= e.MinLevel && level <= e.MaxLevel && e.Cost <= remainingBalance).ToList();
             if (availableEnemies.Count == 0)
                 return null;
 

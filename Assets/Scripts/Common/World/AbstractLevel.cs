@@ -185,6 +185,10 @@ namespace Rover656.Survivors.Common.World {
                 // Spawn experience shards
                 var entity = GetEntity(diedEvent.EntityId);
                 if (entity is Enemy enemy) {
+                    Post(new PlayerExperienceEvent {
+                        ExperienceDelta = enemy.KillExperience,
+                    });
+                    
                     if (enemy.GetOffset(0f, 1f) < ExperienceThreshold) {
                         AddNewEntity(EntityTypes.BasicExperienceShard.Create(), enemy.Position);
                     }
@@ -199,7 +203,7 @@ namespace Rover656.Survivors.Common.World {
         }
 
         protected virtual void OnPlayerExperienceChanged(PlayerExperienceEvent experienceEvent) {
-            Player.Experience = experienceEvent.Experience;
+            Player.Experience += experienceEvent.ExperienceDelta;
         }
         
         protected virtual void OnPlayerLevelChanged(PlayerLevelUpEvent levelEvent) {
