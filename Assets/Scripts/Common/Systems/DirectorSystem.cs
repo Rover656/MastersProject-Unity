@@ -91,6 +91,7 @@ namespace Rover656.Survivors.Common.Systems {
             }
         }
         
+        // PickEnemy and GetEnemySpawnPosition developed and adapted with assistance from generative AI.
         [CanBeNull]
         private EnemyInfo PickEnemy(int level, int remainingBalance, bool isBenchmark)
         {

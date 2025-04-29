@@ -2,6 +2,7 @@
 using UnityEngine;
 
 namespace Rover656.Survivors.Common.Utility {
+    // Developed and adapted with assistance from generative AI.
     public static class CollisionExtensions {
         public static bool Intersects(this Rect rect1, Rect rect2, out Vector2 penetrationVector) {
             if (rect1.Overlaps(rect2)) {

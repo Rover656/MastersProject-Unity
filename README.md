@@ -1,31 +1,7 @@
-Player movement diagram:
-```mermaid
-sequenceDiagram
-    box Client-Side
-    actor Player
-    participant Local Game
-    participant Local Event Bus
-    end
+# A New Approach to Mobile Cloud Gaming: Reducing Hardware Demands via a Networked Event Bus
 
-    box Server-Side
-    participant Remote Event Bus
-    participant Remote Game
-    participant Physics System
-    end
+This is the Unity project and Jupyter Notebook evaluation associated with my MSci Individual Project.
 
-    Player->>Local Game: Player joystick input
-    Local Game->>Local Event Bus: Fire movement vector update event
-    Local Event Bus-->>Local Game: Update player movement vector locally
+The required Unity version is v6000.0.33f1.
 
-    Local Event Bus->>Remote Event Bus: Broadcast the event to remote event bus
-    Remote Event Bus->>Remote Game: Update player movement vector on remote
-
-    Remote Game->>Physics System: Called as part of game update loop
-    Physics System->>Remote Event Bus: Fire update player position event (move player based on movement vec.)
-    Remote Event Bus-->>Remote Game: Update player position on remote
-
-    Remote Event Bus->>Local Event Bus: Broadcast event to the local event bus
-
-    Local Event Bus->>Local Game: Update player position locally
-    Local Game->>Player: Update player position on-screen
-```
+![Project Poster](Poster.png)
