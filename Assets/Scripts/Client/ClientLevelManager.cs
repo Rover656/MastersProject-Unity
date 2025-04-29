@@ -11,6 +11,7 @@ using Terresquall;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Tilemaps;
 
 namespace Rover656.Survivors.Client {
     public class ClientLevelManager : MonoBehaviour {
@@ -32,6 +33,10 @@ namespace Rover656.Survivors.Client {
 
         private GameObject _playerInstance;
 
+        public GameObject backgroundPrefab;
+        private Tilemap backgroundReferenceTilemap;
+        private Dictionary<Vector2Int, GameObject> _backgrounds = new();
+
         private void Start()
         {
             // Copy KVP from Unity into index
@@ -49,12 +54,36 @@ namespace Rover656.Survivors.Client {
             }
             
             _playerInstance = _gameObjects[Level.Player.Id];
+            
+            backgroundReferenceTilemap = backgroundPrefab.GetComponentInChildren<Tilemap>();
         }
 
         private Vector2 _simulatedMovementVector = Vector2.zero;
 
         private void Update() {
-            // TODO: Temporary input logic for player
+            // To avoid the potential for this feature to have a performance impact on benchmarks, only run it on the standard play.
+            // for benchmarks, only spawn the middle one for consistency
+            if (Level.LevelMode == LevelMode.StandardPlay) {
+                // Get background size (our cells are 1 -> 1 with world bounds)
+                var size = backgroundReferenceTilemap.cellBounds.size;
+            
+                // Get the player position in terms of background coordinates
+                var playerPosition = Level.Player.Position;
+                var backgroundPlayerPosition = new Vector2Int(Mathf.RoundToInt(playerPosition.x / size.x), Mathf.RoundToInt(playerPosition.y / size.y));
+            
+                // Get all ordinal neighbors of the background player position
+                for (var x = -1; x <= 1; x++) {
+                    for (var y = -1; y <= 1; y++) {
+                        var bgPos = new Vector2Int(backgroundPlayerPosition.x + x, backgroundPlayerPosition.y + y);
+                    
+                        if (!_backgrounds.ContainsKey(bgPos)) {
+                            _backgrounds.Add(bgPos, Instantiate(backgroundPrefab, new Vector3(bgPos.x * size.x, bgPos.y * size.y, 0), Quaternion.identity));
+                        }
+                    }
+                }
+            } else {
+                Instantiate(backgroundPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+            }
 
             if (Level.LevelMode == LevelMode.StandardPlay) {
                 var joyInput = VirtualJoystick.GetAxis(11);
