@@ -607,12 +607,16 @@ namespace Rover656.Survivors.Framework {
 
         private void Handle(GameSystemActivationEvent systemActivationEvent)
         {
+            var name = Registries.GetNameFrom(FrameworkRegistries.GameSystemTypes, systemActivationEvent.Type);
+            
             if (systemActivationEvent.ActiveEnvironment == Environment)
             {
+                Debug.Log($"Activating system {name} on this side.");
                 _activeSystemTypes.Add(systemActivationEvent.Type);
             }
             else
             {
+                Debug.Log($"Deactivating system {name} on this side.");
                 _activeSystemTypes.Remove(systemActivationEvent.Type);
             }
         }
@@ -646,7 +650,7 @@ namespace Rover656.Survivors.Framework {
 
         private void OnEntityMovementVectorChanged(EntityMovementVectorChangedEvent changedEvent) {
             if (!_entitiesById.TryGetValue(changedEvent.EntityId, out var entity)) {
-                Debug.LogWarning($"Received movement vector change for non-existent entity {changedEvent.EntityId} on {Environment}.");
+                // Debug.LogWarning($"Received movement vector change for non-existent entity {changedEvent.EntityId} on {Environment}.");
                 return;
             }
             
@@ -659,7 +663,7 @@ namespace Rover656.Survivors.Framework {
 
         private void OnEntityPositionChanged(EntityPositionChangedEvent changedEvent) {
             if (!_entitiesById.TryGetValue(changedEvent.EntityId, out var entity)) {
-                Debug.LogWarning($"Received position change for non-existent entity {changedEvent.EntityId} on {Environment}.");
+                // Debug.LogWarning($"Received position change for non-existent entity {changedEvent.EntityId} on {Environment}.");
                 return;
             }
             
